@@ -1,1 +1,1 @@
-# multidisciplinary-project
+# Multidisciplinary Project
