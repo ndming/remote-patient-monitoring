@@ -24,5 +24,5 @@ No.  | Device Name | Part Name | Description | JSON |
 4 | Arduino Board | [UNO R3](https://docs.arduino.cc/hardware/uno-rev3) | CONTROLLER: controls sensors and the transmitter | N/A |
 5 | Bluetooth Module | [HM-10](https://hshop.vn/products/mach-thu-phat-bluetooth-4-0uart-hm10ra-chon) | TRANSMITTER: sends data from the Arduino board to the gateway | N/A |
 
----
+
 [^1]: The Adafruit server offers a feature known as *group*. Since a patient will require at least 3 feeds tracking his status, a group of 3 or more topics is intuitive to represent a patient. 
