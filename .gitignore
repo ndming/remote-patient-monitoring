@@ -130,3 +130,6 @@ dmypy.json
 
 # Legacy resources
 legacy/
+
+# Idea plans
+idea/
