@@ -1,5 +1,7 @@
+from asyncore import loop
+from cv2 import repeat
 import paho.mqtt.client as mqtt
-import time, json
+import time, json, random
 
 HOST_NAME = "2f668bbef55945689d879335037e3110.s2.eu.hivemq.cloud" 
 HOST_PORT = 8883        # tls secure 
@@ -7,6 +9,8 @@ USERNAME  = "angelus"
 PASSWORD  = "1475963Angelus"
 
 CLIENT_ID = "PUB00"
+TOPIC = "experiment/humidity"
+PUB_QOS = 0
 
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc != 0:
@@ -33,10 +37,14 @@ pub.on_publish = on_publish
 pub.connect(host=HOST_NAME, port=HOST_PORT)
 pub.loop_start()
 
-time.sleep(5)
-pub.publish(topic="experiement/temperature", payload=29)
+times = 5
+while times > 0:
+    time.sleep(5)
+    pubDone = pub.publish(topic=TOPIC, payload=random.randint(20, 30), qos=PUB_QOS, retain=True)
+    pubDone.wait_for_publish()
+    times -= 1
 
 time.sleep(5)
 pub.disconnect()
 
-time.sleep(5)
+time.sleep(1)
