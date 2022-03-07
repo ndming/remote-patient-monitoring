@@ -4,8 +4,10 @@ jsStr = '{"name":{"firstName":"Minh","lastName":"Nguyen"},"id":[{"value":20, "au
 
 dic = json.loads(jsStr) # json string to python dictionary
 
+print("From JSON string to py dictionary:")
 print(dic["name"]["firstName"])
 print(dic["id"][0]["value"])
+print("----------------------------------")
 
 someDict = {
     "name":{
@@ -24,6 +26,7 @@ someDict = {
     ]
 }
 
-js = json.dumps(someDict)   # python dictionary to json string
-
+js = json.dumps(someDict, indent=2)   # python dictionary to json string
+print("From py dictionary to JSON string:")
 print(js)
+print("----------------------------------")
