@@ -61,4 +61,7 @@ dependencies {
 
     // AWS IoT Device SDK
     implementation "software.amazon.awssdk.iotdevicesdk:aws-iot-device-sdk:1.7.0"
+
+    // Timber log
+    implementation 'com.jakewharton.timber:timber:5.0.1'
 }
