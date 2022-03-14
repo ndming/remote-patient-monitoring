@@ -22,10 +22,10 @@ The doctors are the major mobile clients. They will use an application named [Ur
 ![](https://i.imgur.com/9b2N8HB.png "System Components")
 
 ## List of Devices
-No.  | Device Name | Part Name | Description | JSON |
----  | ---         | ---       | ---         | ---  |
-1 | Pulse Sensor | [MAX30102](https://hshop.vn/products/cam-bien-nhip-tim-va-oxy-trong-mau-max30102-mh-et-live) | INPUT: measures heart rate | { <br> `"id":"1"` <br> `"name":"PULSE"` <br> `"data":"X"` <br> `"unit":"bpm"` <br>} <br> *X: pulse value (bpm)* |
-2 | Oximeter Sensor | [MAX30102](https://hshop.vn/products/cam-bien-nhip-tim-va-oxy-trong-mau-max30102-mh-et-live) | INPUT: measures oxygen concentration in blood | { <br> `"id":"2"` <br> `"name":"OXYGEN"` <br> `"data":"X"` <br> `"unit":"%"` <br>} <br> *X: concentration value (%)* |
-3 | Temperature Sensor | [DHT11](https://hshop.vn/products/grove-temperature-humidity-sensor-dht11-cam-bien-nhiet-do-do-am) | INPUT: measures temperature | { <br> `"id":"3"` <br> `"name":"TEMPER"` <br> `"data":"X"` <br> `"unit":"°C"` <br>} <br> *X: temperature value (°C)* |
+No.  | Device Name | Part Name | Description |
+---  | ---         | ---       | ---         |
+1 | Pulse Sensor | [MAX30102](https://hshop.vn/products/cam-bien-nhip-tim-va-oxy-trong-mau-max30102-mh-et-live) | INPUT: measures heart rate |
+2 | Oximeter Sensor | [MAX30102](https://hshop.vn/products/cam-bien-nhip-tim-va-oxy-trong-mau-max30102-mh-et-live) | INPUT: measures oxygen concentration in blood |
+3 | Temperature Sensor | [DHT11](https://hshop.vn/products/grove-temperature-humidity-sensor-dht11-cam-bien-nhiet-do-do-am) | INPUT: measures temperature |
 4 | SoC RF Kit | [ESP32](https://hshop.vn/products/kit-rf-thu-phat-wifi-ble-esp32-s2-nodemcu-32-s2-ai-thinker) | CONTROLLER: controls sensors and the transmission | N/A |
 
