@@ -46,26 +46,6 @@ def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectRe
 
 
 
-def onPublish(fn: Future):
-    """
-    Callback for publishing `Future`
-    
-    The QoS determines when the Future completes:
-
-        *   For QoS 0, completes as soon as the packet is sent.
-        *   For QoS 1, completes when PUBACK is received.
-        *   For QoS 2, completes when PUBCOMP is received.
-    
-    If successful, the Future will contain a dict with the following members:
-    ['packet_id'] (int): ID of the PUBLISH packet that is complete.
-    """
-    if (fn.exception() is None):
-        print(f"published: packet_id<{fn.result()}>")
-    else:
-        print(f"publishing failed: {fn.exception()}")
-
-
-
 # spin-up resource
 eventLoopGroup = io.EventLoopGroup()
 hostResolver = io.DefaultHostResolver(eventLoopGroup)
