@@ -1,12 +1,13 @@
-from awscrt import io, mqtt, auth, http
+from awscrt import io, mqtt, auth, exceptions
 from awsiot import mqtt_connection_builder
-import time, json
+from concurrent.futures import Future
+import json
 
-HOST = "a28tut6cil5f32-ats.iot.us-west-2.amazonaws.com"    # endpoint
-PORT = 8883                                                # non web-socket
+ENDPOINT = "a28tut6cil5f32-ats.iot.us-west-2.amazonaws.com"    # endpoint
+HOSTPORT = 8883                                                # non web-socket
 
 CLIENT_ID = "PUB01"
-TOPIC     = "experiment/temperature"
+TOPIC     = "expecto/temper"
 PUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
 
 CA_PATH = 'auth/AmazonRootCA1.pem'
@@ -16,33 +17,99 @@ KEY_PATH = 'auth/f4de10df05578d316754fc9e7f26dd69286fb885784c38fba3af5b83ebef661
 MESSAGE = {
     "id":3,
     "name":"TEMPER",
-    "data":20,
+    "data":21,
     "unit":"\u00b0C"
 }
 
+def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCrtError, **kwargs: dict):
+    """
+    Callback invoked whenever the MQTT connection is lost.
+    The MQTT client will automatically attempt to reconnect.
+        *   `connection` (:class:`awscrt.mqtt.Connection`): This MQTT Connection.
+        *   `error` (:class:`awscrt.exceptions.AwsCrtError`): Exception which caused connection loss.
+        *   `**kwargs` (dict): Forward-compatibility kwargs.
+    """
+    print(f"[C] connection interrupted: {error.name} -> {error.message}")
+
+def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectReturnCode, session_present: bool, **kwargs: dict):
+    """
+    Callback invoked whenever the MQTT connection is automatically resumed.
+        *   `connection` (:class:`awscrt.mqtt.Connection`): This MQTT Connection
+        *   `return_code` (:class:`awscrt.mqtt.ConnectReturnCode`): Connect return
+                code received from the server.
+        *   `session_present` (bool): True if resuming existing session. False if new session.
+                Note that the server has forgotten all previous subscriptions if this is False.
+                Subscriptions can be re-established via resubscribe_existing_topics().
+        *   `**kwargs` (dict): Forward-compatibility kwargs.
+    """
+    print(f"[C] connection resumed: code <{return_code.name}> | session_present <{session_present}>")
+
+
+
+def onPublish(fn: Future):
+    """
+    Callback for publishing `Future`
+    
+    The QoS determines when the Future completes:
+
+        *   For QoS 0, completes as soon as the packet is sent.
+        *   For QoS 1, completes when PUBACK is received.
+        *   For QoS 2, completes when PUBCOMP is received.
+    
+    If successful, the Future will contain a dict with the following members:
+    ['packet_id'] (int): ID of the PUBLISH packet that is complete.
+    """
+    if (fn.exception() is None):
+        print(f"published: packet_id<{fn.result()}>")
+    else:
+        print(f"publishing failed: {fn.exception()}")
+
+
+
 # spin-up resource
-event_loop_group = io.EventLoopGroup(1)
-host_resolver = io.DefaultHostResolver(event_loop_group)
-client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver)
-myAWSIoTClient = mqtt_connection_builder.mtls_from_path(
-    endpoint=HOST,
+eventLoopGroup = io.EventLoopGroup()
+hostResolver = io.DefaultHostResolver(eventLoopGroup)
+clientBootstrap = io.ClientBootstrap(eventLoopGroup, hostResolver)
+tlsContextOptions = io.TlsContextOptions.create_client_with_mtls_from_path(
     cert_filepath=CERTI_PATH,
-    pri_key_filepath=KEY_PATH,
-    client_bootstrap=client_bootstrap,
-    ca_filepath=CA_PATH,
+    pk_filepath=KEY_PATH
+)
+clientTlsContext = io.ClientTlsContext(tlsContextOptions)
+myAWSIoTClient = mqtt.Client(bootstrap=clientBootstrap, tls_ctx=clientTlsContext)
+clientConnection = mqtt.Connection(
+    client=myAWSIoTClient,
+    host_name=ENDPOINT,
+    port=HOSTPORT,
     client_id=CLIENT_ID,
     clean_session=False,
-    keep_alive_secs=6
+    on_connection_interrupted=onConnectionInterrupted,
+    on_connection_resumed=onConnectionResumed
+    # TODO: will
 )
 
-# connect to AWS IoT core
-connect_future = myAWSIoTClient.connect()
-connect_future.result() # waits until a result is available
 
-# publish some message
-myAWSIoTClient.publish(topic=TOPIC, payload=json.dumps(MESSAGE), qos=PUB_QOS, retain=True)
-time.sleep(5)
+try:
+    # connect to AWS IoT core
+    connectFuture = clientConnection.connect()
+    connectResult = connectFuture.result()  # will raise an AwsCrtError on failure
+    print(f"[C] connected: session_present<{connectResult['session_present']}>")
 
-# disconnect
-connect_future = myAWSIoTClient.disconnect()
-connect_future.result()
+    # publish some message
+    publishTuple = clientConnection.publish(
+        topic=TOPIC,
+        payload=json.dumps(MESSAGE).encode(),
+        qos=PUB_QOS,
+        retain=True
+    )
+    publishFuture = publishTuple[0]
+    publishResult = publishFuture.result()
+    print(f"[P] published: packet_id<{publishResult['packet_id']}>")
+
+except KeyboardInterrupt:
+    # disconnect
+    disconnectFuture = clientConnection.disconnect()
+    disconnectFuture.result()
+    print("[C] disconnected")
+
+except exceptions.AwsCrtError as e:
+    print(f"[E] connection failed: {e.message}")
