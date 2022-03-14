@@ -8,6 +8,8 @@
 - A mobile application that subscribes and listens to certain topics from the broker and intuitively displays the data to the end user (doctor).
 - A database server for authentication.
 
+![](https://i.imgur.com/uWWDiZm.png "IoT Modules")
+
 ## Architecture Overview
 The system initiates when there is a conpromise between a doctor and a patient. The patient receives a Set of Sensors (or a wearable that is capable of doing the same functionality) named SOS. The number of SOS is finite, and each SOS has a unique preset serial number (ID) which, in turn, associates with a [Thing](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) on the AWS IoT cloud. Each thing will be registered a unique set of related attributes through [Thing Type](https://docs.aws.amazon.com/iot/latest/developerguide/thing-types.html). The use of 'things' provides an extra layer of security and management for connected devices. It defines the [policies](https://docs.aws.amazon.com/iot/latest/developerguide/iot-policies.html) for authorization and [rules](https://docs.aws.amazon.com/iot/latest/developerguide/iot-rules-tutorial.html) for extra AWS-service utility.
 
@@ -16,6 +18,8 @@ The bridge between the sensors and the AWS IoT cloud is a microcontroller chip. 
 AWS requires strict authoriation for each of its 'thing'. The process requires sufficient [Certificate Authorities (CAs)](https://en.wikipedia.org/wiki/Certificate_authority) files for successful handshake between the client and the server. On the mobile client, the process gets even more complicated, and this is where [vended credential service](https://docs.aws.amazon.com/lake-formation/latest/dg/how-vending-works.html) comes in. AWS offers its native service known as [Amazon Cognito](https://docs.aws.amazon.com/iot/latest/developerguide/cognito-identities.html) that enables the mobile client to process the authorization process through an email address of a Google or Facebook account, easing the identification mechanism substantially.
 
 The doctors are the major mobile clients. They will use an application named [Urgent](https://github.com/hescul/remote-patient-monitoring/tree/main/Urgent) to monitor their patients remotely. Currently, the application is built natively on Android using Kotlin. The UI is also implemented through Kotlin code with [Jetpack Compose](https://developer.android.com/jetpack/compose). The app architecture conforms to the MVVM pattern in which [View Model](https://developer.android.google.cn/topic/libraries/architecture/viewmodel?hl=en) and [Unidirectional Data Flow](https://developer.android.com/jetpack/compose/architecture#:~:text=A%20unidirectional%20data%20flow%20%28UDF%29%20is%20a%20design,app%20using%20unidirectional%20data%20flow%20looks%20like%20this%3A) play the major role. The framework for backend is also backed by AWS, an open-source software framework called [Amplify](https://docs.amplify.aws/lib/q/platform/android/).
+
+![](https://i.imgur.com/9b2N8HB.png "System Components")
 
 ## List of Devices
 No.  | Device Name | Part Name | Description | JSON |
