@@ -1,5 +1,4 @@
-from awscrt import io, mqtt, auth, exceptions
-from awsiot import mqtt_connection_builder
+from awscrt import io, mqtt, exceptions
 import json
 from concurrent.futures import Future
 
@@ -59,17 +58,6 @@ def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectRe
 eventLoopGroup = io.EventLoopGroup()
 hostResolver = io.DefaultHostResolver(eventLoopGroup)
 clientBootstrap = io.ClientBootstrap(eventLoopGroup, hostResolver)
-# clientConnection = mqtt_connection_builder.mtls_from_path(
-#     cert_filepath=CERTI_PATH,
-#     pri_key_filepath=KEY_PATH,
-#     endpoint=ENDPOINT,
-#     client_bootstrap=clientBootstrap,
-#     client_id=CLIENT_ID,
-#     on_connection_interrupted=onConnectionInterrupted,
-#     on_connection_resumed=onConnectionResumed,
-#     clean_session=False,
-#     ca_filepath=CA_PATH
-# )
 tlsContextOptions = io.TlsContextOptions.create_client_with_mtls_from_path(
     cert_filepath=CERTI_PATH,
     pk_filepath=KEY_PATH
