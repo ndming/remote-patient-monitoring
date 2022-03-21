@@ -5,15 +5,18 @@ ENDPOINT = "a2r0f2fq44oocy-ats.iot.us-east-1.amazonaws.com"    # endpoint
 HOSTPORT = 8883                                                # non web-socket
 
 CLIENT_ID = "RPMSOS0000"
-TOPIC     = "rpm/sos/0000"
+TOPIC     = f"rpm/sos/{CLIENT_ID}"
 PUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
+
+NUM_OF_REPETITIONS = 20
+PUBLISH_DELAY = 10  # in sec
 MAX_RECONNECTION_ATTEMPTS = 3
 
-CERTI_PATH = 'auth/RPMSOS0000/f0cad44e7c59c5ccd48f76c3a8a3076ddbaeba5bac2414f94f19c16ac031706b-certificate.pem.crt'
-KEY_PATH = 'auth/RPMSOS0000/f0cad44e7c59c5ccd48f76c3a8a3076ddbaeba5bac2414f94f19c16ac031706b-private.pem.key'
+CERTI_PATH = 'auth/e4c02b472144c232c55988dba7c474a4ae270c662a8ed95080a5a14914cd2e94-certificate.pem.crt'
+KEY_PATH = 'auth/e4c02b472144c232c55988dba7c474a4ae270c662a8ed95080a5a14914cd2e94-private.pem.key'
 
 MESSAGE = {
-    "cid": "RPMSOS0000",
+    "cid": CLIENT_ID,
     "size": 3,
     "time": None,
     "data": {
@@ -66,8 +69,8 @@ def getMessage() -> dict:
     mess['data']['oxi']['value'] = round(random.uniform(85.5, 95.5), 1)
     mess['data']['temper']['value'] = round(random.uniform(36.5, 38.5), 1)
     mess['time'] = time.time()
-    print("your message:")
-    print(json.dumps(mess, indent=2))
+    # print("your message:")
+    # print(json.dumps(mess, indent=2))
     return mess
 
 # spin-up resource
@@ -88,7 +91,6 @@ clientConnection = mqtt.Connection(
     clean_session=False,
     on_connection_interrupted=onConnectionInterrupted,
     on_connection_resumed=onConnectionResumed
-    # TODO: will
 )
 
 try:
@@ -97,23 +99,27 @@ try:
     connectResult = connectFuture.result()  # will raise an AwsCrtError on failure
     print(f"[C] connected: session_present<{connectResult['session_present']}>")
 
-    # get some random data value
-    mess = getMessage()
+    for i in range(NUM_OF_REPETITIONS):
+        # get some random data value
+        mess = getMessage()
 
-    # publish some message
-    publishTuple = clientConnection.publish(
-        topic=TOPIC,
-        payload=json.dumps(mess).encode(),
-        qos=PUB_QOS,
-        retain=True
-    )
-    publishFuture = publishTuple[0]
-    while not publishFuture.done():
-        if countFail > MAX_RECONNECTION_ATTEMPTS:
-            print(f"[E] maximum reconnection attempts tried.")
-            raise KeyboardInterrupt
-    publishResult = publishFuture.result()
-    print(f"[P] published: packet_id<{publishResult['packet_id']}>")
+        # publish the message
+        publishTuple = clientConnection.publish(
+            topic=TOPIC,
+            payload=json.dumps(mess).encode(),
+            qos=PUB_QOS,
+            retain=True
+        )
+        publishFuture = publishTuple[0]
+        while not publishFuture.done():
+            if countFail > MAX_RECONNECTION_ATTEMPTS:
+                print(f"[E] maximum reconnection attempts tried.")
+                raise KeyboardInterrupt
+        publishResult = publishFuture.result()
+        print(f"[P] published: packet_id<{publishResult['packet_id']}>")
+
+        # delay
+        time.sleep(PUBLISH_DELAY)
 
 except KeyboardInterrupt:
     # disconnect(clientConnection)
