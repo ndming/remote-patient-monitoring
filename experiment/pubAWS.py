@@ -1,24 +1,35 @@
-from awscrt import io, mqtt, auth, exceptions
-from awsiot import mqtt_connection_builder
-from concurrent.futures import Future
-import json
+from awscrt import io, mqtt, exceptions
+import json, time, random
 
-ENDPOINT = "a28tut6cil5f32-ats.iot.us-west-2.amazonaws.com"    # endpoint
+ENDPOINT = "a2r0f2fq44oocy-ats.iot.us-east-1.amazonaws.com"    # endpoint
 HOSTPORT = 8883                                                # non web-socket
 
-CLIENT_ID = "PUB01"
-TOPIC     = "expecto/temper"
+CLIENT_ID = "RPMSOS0000"
+TOPIC     = "rpm/sos/0000"
 PUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
+MAX_RECONNECTION_ATTEMPTS = 5
 
-CA_PATH = 'auth/AmazonRootCA1.pem'
-CERTI_PATH = 'auth/f4de10df05578d316754fc9e7f26dd69286fb885784c38fba3af5b83ebef6617-certificate.pem.crt'
-KEY_PATH = 'auth/f4de10df05578d316754fc9e7f26dd69286fb885784c38fba3af5b83ebef6617-private.pem.key'
+CERTI_PATH = 'auth/RPMSOS0000/f0cad44e7c59c5ccd48f76c3a8a3076ddbaeba5bac2414f94f19c16ac031706b-certificate.pem.crt'
+KEY_PATH = 'auth/RPMSOS0000/f0cad44e7c59c5ccd48f76c3a8a3076ddbaeba5bac2414f94f19c16ac031706b-private.pem.key'
 
 MESSAGE = {
-    "id":3,
-    "name":"TEMPER",
-    "data":21,
-    "unit":"\u00b0C"
+    "cid": "RPMSOS0000",
+    "size": 3,
+    "time": None,
+    "data": {
+        "pulse": {
+            "value": None,
+            "unit": "bpm",
+        },
+        "oxi": {
+            "value": None,
+            "unit": "%",
+        },
+        "temper": {
+            "value": None,
+            "unit": "\u00b0C",
+        },
+    },
 }
 
 def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCrtError, **kwargs: dict):
@@ -29,7 +40,7 @@ def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCr
         *   `error` (:class:`awscrt.exceptions.AwsCrtError`): Exception which caused connection loss.
         *   `**kwargs` (dict): Forward-compatibility kwargs.
     """
-    print(f"[C] connection interrupted: {error.name} -> {error.message}")
+    print(f"[C] connection interrupted: {error.message}")
 
 def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectReturnCode, session_present: bool, **kwargs: dict):
     """
@@ -42,9 +53,19 @@ def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectRe
                 Subscriptions can be re-established via resubscribe_existing_topics().
         *   `**kwargs` (dict): Forward-compatibility kwargs.
     """
-    print(f"[C] connection resumed: code <{return_code.name}> | session_present <{session_present}>")
+    print(f"[C] connection resumed: code<{return_code.name}> | session_present<{session_present}>")
+    
 
 
+def getMessage() -> dict:
+    mess = MESSAGE
+    mess['data']['pulse']['value'] = round(random.uniform(65.5, 75.5), 1)
+    mess['data']['oxi']['value'] = round(random.uniform(85.5, 95.5), 1)
+    mess['data']['temper']['value'] = round(random.uniform(36.5, 38.5), 1)
+    mess['time'] = time.time()
+    print("your message:")
+    print(json.dumps(mess, indent=2))
+    return mess
 
 # spin-up resource
 eventLoopGroup = io.EventLoopGroup()
@@ -74,10 +95,13 @@ try:
     connectResult = connectFuture.result()  # will raise an AwsCrtError on failure
     print(f"[C] connected: session_present<{connectResult['session_present']}>")
 
+    # get some value from input terminal
+    mess = getMessage()
+
     # publish some message
     publishTuple = clientConnection.publish(
         topic=TOPIC,
-        payload=json.dumps(MESSAGE).encode(),
+        payload=json.dumps(mess).encode(),
         qos=PUB_QOS,
         retain=True
     )
@@ -86,7 +110,7 @@ try:
     print(f"[P] published: packet_id<{publishResult['packet_id']}>")
 
 except KeyboardInterrupt:
-    # disconnect
+    # disconnect(clientConnection)
     disconnectFuture = clientConnection.disconnect()
     disconnectFuture.result()
     print("[C] disconnected")
