@@ -7,7 +7,7 @@ HOSTPORT = 8883                                                # non web-socket
 CLIENT_ID = "RPMSOS0000"
 TOPIC     = "rpm/sos/0000"
 PUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
-MAX_RECONNECTION_ATTEMPTS = 5
+MAX_RECONNECTION_ATTEMPTS = 3
 
 CERTI_PATH = 'auth/RPMSOS0000/f0cad44e7c59c5ccd48f76c3a8a3076ddbaeba5bac2414f94f19c16ac031706b-certificate.pem.crt'
 KEY_PATH = 'auth/RPMSOS0000/f0cad44e7c59c5ccd48f76c3a8a3076ddbaeba5bac2414f94f19c16ac031706b-private.pem.key'
@@ -32,6 +32,7 @@ MESSAGE = {
     },
 }
 
+countFail = 0
 def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCrtError, **kwargs: dict):
     """
     Callback invoked whenever the MQTT connection is lost.
@@ -41,6 +42,8 @@ def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCr
         *   `**kwargs` (dict): Forward-compatibility kwargs.
     """
     print(f"[C] connection interrupted: {error.message}")
+    global countFail
+    countFail += 1
 
 def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectReturnCode, session_present: bool, **kwargs: dict):
     """
@@ -88,14 +91,13 @@ clientConnection = mqtt.Connection(
     # TODO: will
 )
 
-
 try:
     # connect to AWS IoT core
     connectFuture = clientConnection.connect()
     connectResult = connectFuture.result()  # will raise an AwsCrtError on failure
     print(f"[C] connected: session_present<{connectResult['session_present']}>")
 
-    # get some value from input terminal
+    # get some random data value
     mess = getMessage()
 
     # publish some message
@@ -106,6 +108,10 @@ try:
         retain=True
     )
     publishFuture = publishTuple[0]
+    while not publishFuture.done():
+        if countFail > MAX_RECONNECTION_ATTEMPTS:
+            print(f"[E] maximum reconnection attempts tried.")
+            raise KeyboardInterrupt
     publishResult = publishFuture.result()
     print(f"[P] published: packet_id<{publishResult['packet_id']}>")
 
