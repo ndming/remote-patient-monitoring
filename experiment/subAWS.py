@@ -6,12 +6,13 @@ ENDPOINT = "a2r0f2fq44oocy-ats.iot.us-east-1.amazonaws.com"    # endpoint
 HOSTPORT = 8883                                                # non web-socket
 
 CLIENT_ID = "RPMDOC0000"
-TOPIC     = "rpm/sos/RPMSOS0000"    # subscribe topic
+TOPIC     = "rpm/sos/RPMSOS000"    # subscribe topic
 SUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
 
 CERTI_PATH = 'auth/RPMDOC/0cd28110e617ed0a83e0a667c5966bf54878cd197f471a3312a9b9be6ca6c0c4-certificate.pem.crt'
 KEY_PATH = 'auth/RPMDOC/0cd28110e617ed0a83e0a667c5966bf54878cd197f471a3312a9b9be6ca6c0c4-private.pem.key'
 
+MAX_RECONNECTION_ATTEMPTS = 3
 
 def onMessage(topic: str, payload: bytes, dup: bool, qos: mqtt.QoS, retain: bool, **kwargs: dict):
     """
@@ -29,6 +30,7 @@ def onMessage(topic: str, payload: bytes, dup: bool, qos: mqtt.QoS, retain: bool
     dict = json.loads(payload.decode())
     print(json.dumps(dict, indent=2))
 
+countFail = 0
 def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCrtError, **kwargs: dict):
     """
     Callback invoked whenever the MQTT connection is lost.
@@ -38,6 +40,8 @@ def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCr
         *   `**kwargs` (dict): Forward-compatibility kwargs.
     """
     print(f"[W] connection interrupted: {error.message}")
+    global countFail
+    countFail += 1
 
 def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectReturnCode, session_present: bool, **kwargs: dict):
     """
@@ -86,6 +90,10 @@ try:
         callback=onMessage
     )
     subscribeFuture = subscribeTuple[0]
+    while not subscribeFuture.done():
+        if countFail > MAX_RECONNECTION_ATTEMPTS:
+            print(f"[E] maximum reconnection attempts tried.")
+            raise KeyboardInterrupt
     subscribeResult = subscribeFuture.result()
     print(f"[S] subscribed: subpacket_id<{subscribeResult['packet_id']}> | topic<{subscribeResult['topic']}> | QoS<{subscribeResult['qos']}>")
 
