@@ -1,18 +1,16 @@
 from awscrt import io, mqtt, exceptions
 import json
-from concurrent.futures import Future
 
 
-ENDPOINT = "a28tut6cil5f32-ats.iot.us-west-2.amazonaws.com"    # endpoint
+ENDPOINT = "a2r0f2fq44oocy-ats.iot.us-east-1.amazonaws.com"    # endpoint
 HOSTPORT = 8883                                                # non web-socket
 
-CLIENT_ID = "SUB03"
-TOPIC     = "expecto/temper"
+CLIENT_ID = "RPMDOC0000"
+TOPIC     = "rpm/sos/RPMSOS0000"    # subscribe topic
 SUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
 
-CA_PATH = 'auth/AmazonRootCA1.pem'
-CERTI_PATH = 'auth/f4de10df05578d316754fc9e7f26dd69286fb885784c38fba3af5b83ebef6617-certificate.pem.crt'
-KEY_PATH = 'auth/f4de10df05578d316754fc9e7f26dd69286fb885784c38fba3af5b83ebef6617-private.pem.key'
+CERTI_PATH = 'auth/RPMDOC/0cd28110e617ed0a83e0a667c5966bf54878cd197f471a3312a9b9be6ca6c0c4-certificate.pem.crt'
+KEY_PATH = 'auth/RPMDOC/0cd28110e617ed0a83e0a667c5966bf54878cd197f471a3312a9b9be6ca6c0c4-private.pem.key'
 
 
 def onMessage(topic: str, payload: bytes, dup: bool, qos: mqtt.QoS, retain: bool, **kwargs: dict):
@@ -69,7 +67,7 @@ clientConnection = mqtt.Connection(
     host_name=ENDPOINT,
     port=HOSTPORT,
     client_id=CLIENT_ID,
-    clean_session=True,
+    clean_session=False,
     on_connection_interrupted=onConnectionInterrupted,
     on_connection_resumed=onConnectionResumed
     # TODO: will
