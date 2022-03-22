@@ -6,13 +6,14 @@ ENDPOINT = "a2r0f2fq44oocy-ats.iot.us-east-1.amazonaws.com"    # endpoint
 HOSTPORT = 8883                                                # non web-socket
 
 CLIENT_ID = "RPMDOC0000"
-TOPIC     = "rpm/sos/RPMSOS000"    # subscribe topic
+DATA_TOPIC = "rpm/sos/RPMSOS0000"
+STAT_TOPIC = "rpm/tus/RPMSOS0000"
 SUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
 
 CERTI_PATH = 'auth/RPMDOC/0cd28110e617ed0a83e0a667c5966bf54878cd197f471a3312a9b9be6ca6c0c4-certificate.pem.crt'
 KEY_PATH = 'auth/RPMDOC/0cd28110e617ed0a83e0a667c5966bf54878cd197f471a3312a9b9be6ca6c0c4-private.pem.key'
 
-MAX_RECONNECTION_ATTEMPTS = 3
+MAX_RECONNECTION_ATTEMPTS = 2
 
 def onMessage(topic: str, payload: bytes, dup: bool, qos: mqtt.QoS, retain: bool, **kwargs: dict):
     """
@@ -30,7 +31,7 @@ def onMessage(topic: str, payload: bytes, dup: bool, qos: mqtt.QoS, retain: bool
     dict = json.loads(payload.decode())
     print(json.dumps(dict, indent=2))
 
-countFail = 0
+isFailed = False
 def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCrtError, **kwargs: dict):
     """
     Callback invoked whenever the MQTT connection is lost.
@@ -39,9 +40,9 @@ def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCr
         *   `error` (:class:`awscrt.exceptions.AwsCrtError`): Exception which caused connection loss.
         *   `**kwargs` (dict): Forward-compatibility kwargs.
     """
-    print(f"[W] connection interrupted: {error.message}")
-    global countFail
-    countFail += 1
+    print(f"[E] {error.name}: {error.message}")
+    global isFailed
+    isFailed = True
 
 def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectReturnCode, session_present: bool, **kwargs: dict):
     """
@@ -55,6 +56,25 @@ def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectRe
         *   `**kwargs` (dict): Forward-compatibility kwargs.
     """
     print(f"[C] connection resumed: code<{return_code.name}> | session_present<{session_present}>")
+
+def subscribeTopic(cn: mqtt.Connection, topic: str):
+    global isFailed
+    subscribeTuple = cn.subscribe(
+        topic=topic,
+        qos=SUB_QOS,
+        callback=onMessage
+    )
+    subscribeFuture = subscribeTuple[0]
+    while not subscribeFuture.done():
+        if isFailed:
+            raise mqtt.SubscribeError(f"topic<{topic}>")
+    subscribeResult = subscribeFuture.result()
+    print(f"[S] subscribed: subpacket_id<{subscribeResult['packet_id']}> | topic<{subscribeResult['topic']}> | QoS<{subscribeResult['qos']}>")
+
+def disconnectClient(cn: mqtt.Connection):
+    disconnectFuture = cn.disconnect()
+    disconnectFuture.result()
+    print("[C] disconnected")
 
 # spin-up resource
 eventLoopGroup = io.EventLoopGroup()
@@ -74,7 +94,6 @@ clientConnection = mqtt.Connection(
     clean_session=False,
     on_connection_interrupted=onConnectionInterrupted,
     on_connection_resumed=onConnectionResumed
-    # TODO: will
 )
 
 try:
@@ -83,32 +102,18 @@ try:
     connectResult = connectFuture.result()  # will raise an AwsCrtError on failure
     print(f"[C] connected: session_present<{connectResult['session_present']}>")
 
-    # subscribe to a topic
-    subscribeTuple = clientConnection.subscribe(
-        topic=TOPIC,
-        qos=SUB_QOS,
-        callback=onMessage
-    )
-    subscribeFuture = subscribeTuple[0]
-    while not subscribeFuture.done():
-        if countFail > MAX_RECONNECTION_ATTEMPTS:
-            print(f"[E] maximum reconnection attempts tried.")
-            raise KeyboardInterrupt
-    subscribeResult = subscribeFuture.result()
-    print(f"[S] subscribed: subpacket_id<{subscribeResult['packet_id']}> | topic<{subscribeResult['topic']}> | QoS<{subscribeResult['qos']}>")
+    subscribeTopic(clientConnection, DATA_TOPIC)
 
     # listening
     while True:
         pass
 
 except KeyboardInterrupt:
-    # disconnect
-    disconnectFuture = clientConnection.disconnect()
-    disconnectFuture.result()
-    print("[C] disconnected")
+    disconnectClient(clientConnection)
 
 except mqtt.SubscribeError as e:
-    print(f"[S] subscription failed: {e}")
+    print(f"[S] AWS_SUBSCRIBE_ERROR: {e.args[0]}")
+    disconnectClient(clientConnection)
 
 except exceptions.AwsCrtError as e:
-    print(f"[E] connection failed: {e.message}")
+    print(f"[E] {e.name}: {e.message}")
