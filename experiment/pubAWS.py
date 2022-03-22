@@ -5,17 +5,21 @@ ENDPOINT = "a2r0f2fq44oocy-ats.iot.us-east-1.amazonaws.com"    # endpoint
 HOSTPORT = 8883                                                # non web-socket
 
 CLIENT_ID = "RPMSOS0000"
-TOPIC     = f"rpm/sos/{CLIENT_ID}"
+DATA_TOPIC = f"rpm/soss/{CLIENT_ID}"
+STAT_TOPIC = f"rpm/tus/{CLIENT_ID}"
 PUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
 
-NUM_OF_REPETITIONS = 3
-PUBLISH_DELAY = 5  # in sec
-MAX_RECONNECTION_ATTEMPTS = 3
+NUM_OF_REPETITIONS = 1
+PUBLISH_DELAY = 0  # in sec
+MAX_RECONNECTION_ATTEMPTS = 2
 
-CERTI_PATH = 'auth/RPMSOS/e4c02b472144c232c55988dba7c474a4ae270c662a8ed95080a5a14914cd2e94-certificate.pem.crt'
-KEY_PATH = 'auth/RPMSOS/e4c02b472144c232c55988dba7c474a4ae270c662a8ed95080a5a14914cd2e94-private.pem.key'
+CERTI_PATH_0000 = 'auth/RPMSOS0000/69a713daa8a9d05b477ea0172939360fff01619c064b7720f2ec5882503a79ee-certificate.pem.crt'
+KEY_PATH_0000 = 'auth/RPMSOS0000/69a713daa8a9d05b477ea0172939360fff01619c064b7720f2ec5882503a79ee-private.pem.key'
 
-MESSAGE = {
+CERTI_PATH_0001 = 'auth/RPMSOS0001/335e60492169df4893484de4644741ddd52dbe1abdc4cc54e1c1e060933605d7-certificate.pem.crt'
+KEY_PATH_0001 = 'auth/RPMSOS0001/335e60492169df4893484de4644741ddd52dbe1abdc4cc54e1c1e060933605d7-private.pem.key'
+
+DATA_MESSAGE = {
     "cid": CLIENT_ID,
     "size": 3,
     "time": None,
@@ -35,7 +39,17 @@ MESSAGE = {
     },
 }
 
-countFail = 0
+STAT_MESSAGE = {
+    "cid": CLIENT_ID,
+    "code": None
+}
+
+WILL_MESSAGE = {
+    "cid": CLIENT_ID,
+    "code": 2
+}
+
+isFailed = False
 def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCrtError, **kwargs: dict):
     """
     Callback invoked whenever the MQTT connection is lost.
@@ -45,8 +59,8 @@ def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCr
         *   `**kwargs` (dict): Forward-compatibility kwargs.
     """
     print(f"[C] connection interrupted: {error.message}")
-    global countFail
-    countFail += 1
+    global isFailed
+    isFailed = True
 
 def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectReturnCode, session_present: bool, **kwargs: dict):
     """
@@ -63,8 +77,8 @@ def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectRe
     
 
 
-def getMessage() -> dict:
-    mess = MESSAGE
+def getDataMessage() -> dict:
+    mess = DATA_MESSAGE
     mess['data']['pulse']['value'] = round(random.uniform(65.5, 75.5), 1)
     mess['data']['oxi']['value'] = round(random.uniform(85.5, 95.5), 1)
     mess['data']['temper']['value'] = round(random.uniform(36.5, 38.5), 1)
@@ -73,16 +87,54 @@ def getMessage() -> dict:
     # print(json.dumps(mess, indent=2))
     return mess
 
+def getStatMessage(code: int) -> dict:
+    mess = STAT_MESSAGE
+    mess['code'] = code
+    return mess
+
+def publishMessage(cn: mqtt.Connection, topic: str, message: dict):
+    global isFailed
+    publishTuple = cn.publish(
+        topic=topic,
+        payload=json.dumps(message).encode(),
+        qos=PUB_QOS,
+        retain=True
+    )
+    publishFuture = publishTuple[0]
+    while not publishFuture.done():
+        if isFailed:
+            raise exceptions.AwsCrtError(code=None, name="AWS_ERROR_PUBLISH", message="unauthorized topic")
+    publishResult = publishFuture.result()
+    print(f"[P] published to topic<{topic}>: packet_id<{publishResult['packet_id']}>")
+
+def connectClient(cn: mqtt.Connection):
+    connectFuture = cn.connect()
+    connectResult = connectFuture.result()  # will raise an AwsCrtError on failure
+    print(f"[C] connected: session_present<{connectResult['session_present']}>")
+    publishMessage(cn, STAT_TOPIC, getStatMessage(0))
+
+def disconnectClient(cn: mqtt.Connection):
+    publishMessage(cn, STAT_TOPIC, getStatMessage(1))
+    disconnectFuture = cn.disconnect()
+    disconnectFuture.result()
+    print("[C] disconnected")
+
 # spin-up resource
 eventLoopGroup = io.EventLoopGroup()
 hostResolver = io.DefaultHostResolver(eventLoopGroup)
 clientBootstrap = io.ClientBootstrap(eventLoopGroup, hostResolver)
 tlsContextOptions = io.TlsContextOptions.create_client_with_mtls_from_path(
-    cert_filepath=CERTI_PATH,
-    pk_filepath=KEY_PATH
+    cert_filepath=CERTI_PATH_0000,
+    pk_filepath=KEY_PATH_0000
 )
 clientTlsContext = io.ClientTlsContext(tlsContextOptions)
 myAWSIoTClient = mqtt.Client(bootstrap=clientBootstrap, tls_ctx=clientTlsContext)
+clientWill = mqtt.Will(
+    topic=STAT_TOPIC,
+    qos=PUB_QOS,
+    payload=json.dumps(WILL_MESSAGE).encode(),
+    retain=True
+)
 clientConnection = mqtt.Connection(
     client=myAWSIoTClient,
     host_name=ENDPOINT,
@@ -90,42 +142,23 @@ clientConnection = mqtt.Connection(
     client_id=CLIENT_ID,
     clean_session=False,
     on_connection_interrupted=onConnectionInterrupted,
-    on_connection_resumed=onConnectionResumed
+    on_connection_resumed=onConnectionResumed,
+    will=clientWill
 )
 
 try:
-    # connect to AWS IoT core
-    connectFuture = clientConnection.connect()
-    connectResult = connectFuture.result()  # will raise an AwsCrtError on failure
-    print(f"[C] connected: session_present<{connectResult['session_present']}>")
+    # connect to AWS IoT core and set status to 0 (online)
+    connectClient(clientConnection)
 
     for i in range(NUM_OF_REPETITIONS):
-        # get some random data value
-        mess = getMessage()
-
-        # publish the message
-        publishTuple = clientConnection.publish(
-            topic=TOPIC,
-            payload=json.dumps(mess).encode(),
-            qos=PUB_QOS,
-            retain=True
-        )
-        publishFuture = publishTuple[0]
-        while not publishFuture.done():
-            if countFail > MAX_RECONNECTION_ATTEMPTS:
-                print(f"[E] maximum reconnection attempts tried.")
-                raise KeyboardInterrupt
-        publishResult = publishFuture.result()
-        print(f"[P] published: packet_id<{publishResult['packet_id']}>")
+        # publish a random-value message
+        publishMessage(clientConnection, DATA_TOPIC, getDataMessage())
 
         # delay
         time.sleep(PUBLISH_DELAY)
-
-except KeyboardInterrupt:
-    # disconnect(clientConnection)
-    disconnectFuture = clientConnection.disconnect()
-    disconnectFuture.result()
-    print("[C] disconnected")
+    
+    # disconnect on completed publish and set status to 1 (offline)
+    disconnectClient(clientConnection)
 
 except exceptions.AwsCrtError as e:
-    print(f"[E] connection failed: {e.message}")
+    print(f"[E] {e.name}: {e.message}")
