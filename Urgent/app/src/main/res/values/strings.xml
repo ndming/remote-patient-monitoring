@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Urgent</string>
+    <string name="cd_emailIcon">Email Icon</string>
+    <string name="cd_lockIcon">Lock Icon</string>
+    <string name="cd_visibilityIcon">Visibility Icon</string>
+    <string name="cd_visibilityOffIcon">Visibility Off Icon</string>
 </resources>
