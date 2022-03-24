@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -50,10 +51,10 @@ fun InfoTextField(
         value = text,
         onValueChange = onTextChange,
         label = {
-            Text(text = fieldType.label)
+            Text(text = stringResource(id = fieldType.label))
         },
         placeholder = {
-            Text(text = fieldType.hint)          
+            Text(text = stringResource(fieldType.hint))
         },
         trailingIcon = {
             if (enableTrailingContent) {
