@@ -58,10 +58,25 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
+    implementation "androidx.compose.material:material-icons-extended:$compose_version"
 
-    // AWS IoT Device SDK
-    implementation "software.amazon.awssdk.iotdevicesdk:aws-iot-device-sdk:1.7.0"
+    // AWS IoT Android SDK
+    implementation 'com.amazonaws:aws-android-sdk-iot:2.42.0'
+
+    // AWS Cognito
+    implementation 'com.amazonaws:aws-android-sdk-cognitoauth:2.42.0'
+    implementation 'com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.42.0'
 
     // Timber log
     implementation 'com.jakewharton.timber:timber:5.0.1'
+}
+
+// Compiler flag to use experimental Compose APIs
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs += [
+                "-Xopt-in=kotlin.RequiresOptIn"
+        ]
+    }
 }
