@@ -1,7 +1,19 @@
 <resources>
     <string name="app_name">Urgent</string>
+
     <string name="cd_emailIcon">Email Icon</string>
     <string name="cd_lockIcon">Lock Icon</string>
     <string name="cd_visibilityIcon">Visibility Icon</string>
     <string name="cd_visibilityOffIcon">Visibility Off Icon</string>
+
+    <string name="ui_signUpScreen_unknownFailCause">Sign up failed. Please try again.</string>
+    <string name="ui_signUpScreen_userNameFieldLabel">Username</string>
+    <string name="ui_signUpScreen_userNameFieldHint">Enter a name of your choice</string>
+    <string name="ui_signUpScreen_emailFieldLabel">Email</string>
+    <string name="ui_signUpScreen_emailFieldHint">Enter your email</string>
+    <string name="ui_signUpScreen_passwordFieldLabel">Password</string>
+    <string name="ui_signUpScreen_passwordFieldHint">Enter your password</string>
+    <string name="ui_signUpScreen_confirmPasswordFieldLabel">Confirm Password</string>
+    <string name="ui_signUpScreen_confirmPasswordFieldHint">Re-enter your password</string>
+    <string name="ui_signUpScreen_signUpButton">Continue</string>
 </resources>
