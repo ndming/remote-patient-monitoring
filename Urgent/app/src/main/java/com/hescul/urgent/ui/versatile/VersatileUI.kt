@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,6 +42,8 @@ fun InfoTextField(
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Done,
     onImeAction: () -> Unit = {},
     maxLines: Int = 1,
     isError: Boolean = false,
@@ -67,7 +70,10 @@ fun InfoTextField(
                 }
             }
         },
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = imeAction,
+            keyboardType = keyboardType
+        ),
         keyboardActions = KeyboardActions(
             onDone = {
                 onImeAction()
