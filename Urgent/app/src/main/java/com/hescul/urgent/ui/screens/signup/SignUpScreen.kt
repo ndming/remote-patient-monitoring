@@ -55,9 +55,10 @@ fun SignUpScreen(
 
         Spacer(modifier = Modifier.padding(vertical = 40.dp))
         SignUpButton(
-            signUpViewModel = signUpViewModel,
             onSignUp = signUpViewModel::onSignUpRequest,
-            sidePadding = sidePadding
+            sidePadding = sidePadding,
+            buttonEnable = signUpViewModel.isButtonEnable(),
+            isProgressing = signUpViewModel.isProgressing
         )
         SignUpFooter()
     }
@@ -69,7 +70,7 @@ fun SignUpInfoField(
     signUpViewModel: SignUpViewModel,
     modifier: Modifier = Modifier,
     innerPadding: Dp = 5.dp,
-    sidePadding: Dp = 30.dp,
+    sidePadding: Dp = 40.dp,
     enableEdit: Boolean = true,
 ) {
     Column(
@@ -116,12 +117,12 @@ fun SignUpInfoField(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SignUpButton(
-    signUpViewModel: SignUpViewModel,
     onSignUp: (context: Context) -> Unit,
     modifier: Modifier = Modifier,
-    sidePadding: Dp = 30.dp,
+    buttonEnable: Boolean = true,
+    isProgressing: Boolean = false,
+    sidePadding: Dp = 40.dp,
 ) {
-    val buttonEnable = signUpViewModel.isButtonEnable()
     val localContext = LocalContext.current
     Button(
         onClick = { onSignUp(localContext) },
@@ -129,12 +130,11 @@ fun SignUpButton(
         enabled = buttonEnable
     ) {
         Row {
-            AnimatedVisibility(visible = !signUpViewModel.isProgressing) {
+            AnimatedVisibility(visible = !isProgressing) {
                 Text(
                     text =  stringResource(id = R.string.ui_signUpScreen_signUpButton),
                     modifier = Modifier
                         .padding(
-                            //horizontal = 100.dp,
                             vertical = 8.dp
                         )
                         .fillMaxWidth(),
@@ -142,7 +142,7 @@ fun SignUpButton(
                     textAlign = TextAlign.Center
                 )
             }
-            AnimatedVisibility(visible = signUpViewModel.isProgressing) {
+            AnimatedVisibility(visible = isProgressing) {
                 CircularProgressIndicator(
                     color = MaterialTheme.colors.onPrimary
                 )
