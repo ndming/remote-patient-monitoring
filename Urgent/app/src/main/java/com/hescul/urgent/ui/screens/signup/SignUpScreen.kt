@@ -3,7 +3,6 @@ package com.hescul.urgent.ui.screens.signup
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -26,20 +25,20 @@ import com.hescul.urgent.ui.theme.UrgentTheme
 fun SignUpScreen(
     signUpViewModel: SignUpViewModel,
     modifier: Modifier = Modifier,
+    sidePadding: Dp = 40.dp
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .padding(horizontal = sidePadding)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         SignUpHeader()
-        val sidePadding = 40.dp
         SignUpInfoField(
             signUpViewModel = signUpViewModel,
             modifier = Modifier,
-            sidePadding = sidePadding,
             enableEdit = !signUpViewModel.isProgressing
         )
         AnimatedVisibility(visible = signUpViewModel.failCause.isNotEmpty()) {
@@ -56,7 +55,6 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.padding(vertical = 40.dp))
         SignUpButton(
             onSignUp = signUpViewModel::onSignUpRequest,
-            sidePadding = sidePadding,
             buttonEnable = signUpViewModel.isButtonEnable(),
             isProgressing = signUpViewModel.isProgressing
         )
@@ -70,11 +68,10 @@ fun SignUpInfoField(
     signUpViewModel: SignUpViewModel,
     modifier: Modifier = Modifier,
     innerPadding: Dp = 5.dp,
-    sidePadding: Dp = 40.dp,
     enableEdit: Boolean = true,
 ) {
     Column(
-        modifier = modifier.padding(horizontal = sidePadding)
+        modifier = modifier
     ) {
         UserNameField(
             text = signUpViewModel.userNameTextInput,
@@ -121,12 +118,11 @@ fun SignUpButton(
     modifier: Modifier = Modifier,
     buttonEnable: Boolean = true,
     isProgressing: Boolean = false,
-    sidePadding: Dp = 40.dp,
 ) {
     val localContext = LocalContext.current
     Button(
         onClick = { onSignUp(localContext) },
-        modifier = modifier.padding(horizontal = sidePadding),
+        modifier = modifier,
         enabled = buttonEnable
     ) {
         Row {
