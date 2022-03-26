@@ -24,10 +24,12 @@ import com.hescul.urgent.ui.theme.UrgentTheme
  * @param fieldType the [InfoFieldType] holds metadata for this text field
  * @param onTextChange (event) request the text change state
  * @param modifier the modifier for this element
+ * @param enabled when set to false, the field is disabled
  * @param onImeAction (event) notify caller of [ImeAction.Done] events
  * @param maxLines maximum number of input lines
- * @param isError (state) when set to True, the [OutlinedTextField] will reacts to display the error state
- * @param visualTransform (state) transforms the input text into different visuals
+ * @param isError when set to True, the [OutlinedTextField] will reacts to display the error state
+ * @param visualTransform transforms the input text into different visuals
+ * @param enableTrailingContent when set to true, the trailing action content will be available
  * @param trailingActionContent the content for trailing icon action
  * @param onTrailingAction callback when trailing action triggered
  */
@@ -38,6 +40,7 @@ fun InfoTextField(
     fieldType: InfoFieldType,
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onImeAction: () -> Unit = {},
     maxLines: Int = 1,
     isError: Boolean = false,
@@ -56,6 +59,7 @@ fun InfoTextField(
         placeholder = {
             Text(text = stringResource(fieldType.hint))
         },
+        enabled = enabled,
         trailingIcon = {
             if (enableTrailingContent) {
                 IconButton(onClick = onTrailingAction) {
@@ -101,6 +105,7 @@ fun PreviewPasswordInfoTextField() {
                 fieldType = InfoFieldType.PasswordField,
                 onTextChange = {},
                 visualTransform = PasswordVisualTransformation(),
+                enableTrailingContent = true,
                 trailingActionContent = {
                     Icon(
                         imageVector = Icons.Outlined.VisibilityOff,
