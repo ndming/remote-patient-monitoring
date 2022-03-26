@@ -1,26 +1,26 @@
 package com.hescul.urgent.ui.screens.signup
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hescul.urgent.R
-import com.hescul.urgent.core.utils.InfoValidator
 import com.hescul.urgent.ui.theme.UrgentTheme
 import com.hescul.urgent.ui.versatile.InfoFieldType
 import com.hescul.urgent.ui.versatile.InfoTextField
@@ -181,6 +181,43 @@ fun SignUpFooter(
         textAlign = TextAlign.Center,
         modifier = modifier.padding(vertical = footerPadding),
     )
+}
+
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun SignUpButton(
+    onSignUp: (context: Context) -> Unit,
+    modifier: Modifier = Modifier,
+    buttonEnable: Boolean = true,
+    isProgressing: Boolean = false,
+) {
+    val localContext = LocalContext.current
+    Button(
+        onClick = { onSignUp(localContext) },
+        modifier = modifier,
+        enabled = buttonEnable
+    ) {
+        Row {
+            AnimatedVisibility(visible = !isProgressing) {
+                Text(
+                    text =  stringResource(id = R.string.ui_signUpScreen_signUpButton),
+                    modifier = Modifier
+                        .padding(
+                            vertical = 8.dp
+                        )
+                        .fillMaxWidth(),
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+            AnimatedVisibility(visible = isProgressing) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colors.onPrimary
+                )
+            }
+        }
+    }
 }
 
 @Preview
