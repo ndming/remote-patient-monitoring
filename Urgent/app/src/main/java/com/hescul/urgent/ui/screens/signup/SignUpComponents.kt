@@ -1,8 +1,9 @@
 package com.hescul.urgent.ui.screens.signup
 
 import android.content.Context
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.*
+import androidx.compose.animation.core.TweenSpec
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -20,10 +21,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserAttributes
+import com.amazonaws.services.cognitoidentityprovider.model.SignUpResult
 import com.hescul.urgent.R
 import com.hescul.urgent.ui.theme.UrgentTheme
 import com.hescul.urgent.ui.versatile.InfoFieldType
 import com.hescul.urgent.ui.versatile.InfoTextField
+import com.hescul.urgent.ui.versatile.LoadingButton
+import com.hescul.urgent.ui.versatile.config.LoadingButtonConfig
+import com.hescul.urgent.ui.versatile.config.ViewConfig
 
 
 @Composable
@@ -143,15 +150,12 @@ fun ConfirmPasswordField(
 @Composable
 fun SignUpHeader(
     modifier: Modifier = Modifier,
-    headerStartPadding: Dp = 20.dp,
     headerInnerPadding: Dp = 5.dp,
-    headerEndPadding: Dp = 10.dp,
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.padding(vertical = headerStartPadding))
         Text(
             text = "Register Account",
             style = MaterialTheme.typography.h4,
@@ -164,7 +168,6 @@ fun SignUpHeader(
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(vertical = headerInnerPadding)
         )
-        Spacer(modifier = Modifier.padding(vertical = headerEndPadding))
     }
 }
 
@@ -187,37 +190,24 @@ fun SignUpFooter(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SignUpButton(
-    onSignUp: (context: Context) -> Unit,
+    onSignUp: () -> Unit,
     modifier: Modifier = Modifier,
     buttonEnable: Boolean = true,
     isProgressing: Boolean = false,
 ) {
-    val localContext = LocalContext.current
-    Button(
-        onClick = { onSignUp(localContext) },
+    LoadingButton(
+        text = stringResource(id = R.string.ui_signUpScreen_signUpButton),
+        onClick = onSignUp,
         modifier = modifier,
-        enabled = buttonEnable
-    ) {
-        Row {
-            AnimatedVisibility(visible = !isProgressing) {
-                Text(
-                    text =  stringResource(id = R.string.ui_signUpScreen_signUpButton),
-                    modifier = Modifier
-                        .padding(
-                            vertical = 8.dp
-                        )
-                        .fillMaxWidth(),
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-            AnimatedVisibility(visible = isProgressing) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colors.onPrimary
-                )
-            }
-        }
-    }
+        enabled = buttonEnable,
+        isLoading = isProgressing,
+        textFontSize = LoadingButtonConfig.TEXT_FONT_SIZE.sp,
+        buttonWidth = ViewConfig.TEXT_FIELD_DEFAULT_WIDTH.dp,
+        buttonHeight = ViewConfig.TEXT_FIELD_DEFAULT_HEIGHT.dp,
+        loadingWidth = ViewConfig.CIRCULAR_PROGRESS_INDICATOR_DEFAULT_WIDTH.dp,
+        transitionDuration = LoadingButtonConfig.STATE_TRANSITION_DURATION,
+        textEnterTransition = fadeIn(animationSpec = TweenSpec(delay = LoadingButtonConfig.TEXT_FADE_IN_DELAY)),
+    )
 }
 
 @Preview
@@ -236,6 +226,18 @@ fun PreviewSignUpFooter() {
     UrgentTheme {
         Surface {
             SignUpFooter()
+        }
+    }
+}
+
+@Preview
+@Composable
+fun PreviewSignUpButton() {
+    UrgentTheme {
+        Surface {
+            SignUpButton(
+                onSignUp = {}
+            )
         }
     }
 }
