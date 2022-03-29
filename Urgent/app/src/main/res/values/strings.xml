@@ -6,7 +6,7 @@
     <string name="cd_visibilityIcon">Visibility Icon</string>
     <string name="cd_visibilityOffIcon">Visibility Off Icon</string>
 
-    <string name="ui_signUpScreen_unknownFailCause">Sign up failed. Please try again.</string>
+    <string name="ui_signUpScreen_defaultFailCause">Sign up failed. Please try again.</string>
     <string name="ui_signUpScreen_userNameFieldLabel">Username</string>
     <string name="ui_signUpScreen_userNameFieldHint">Enter a name of your choice</string>
     <string name="ui_signUpScreen_emailFieldLabel">Email</string>
@@ -16,4 +16,16 @@
     <string name="ui_signUpScreen_confirmPasswordFieldLabel">Confirm Password</string>
     <string name="ui_signUpScreen_confirmPasswordFieldHint">Re-enter your password</string>
     <string name="ui_signUpScreen_signUpButton">Continue</string>
+
+    <string name="ui_confirmScreen_defaultFailCause">Confirmation failed</string>
+    <string name="ui_confirmScreen_greeting">Greetings,</string>
+    <string name="ui_confirmScreen_confirmInstruction">A confirmation code was sent to your</string>
+    <string name="ui_confirmScreen_confirmFieldLabel">Code</string>
+    <string name="ui_confirmScreen_confirmFieldHint">Enter the confirmation code</string>
+    <string name="ui_confirmScreen_confirmButton">Verify</string>
+    <string name="ui_confirmScreen_backToLoginButton">Back to LOGIN page</string>
+    <string name="ui_confirmScreen_defaultUserName">Urgent User</string>
+    <string name="ui_confirmScreen_defaultConfirmMethod">sign-up method</string>
+    <string name="ui_confirmScreen_confirmSuccessMessage">Verified successfully!</string>
+    <string name="ui_confirmScreen_skipConfirmationButton">Skip for now</string>
 </resources>
