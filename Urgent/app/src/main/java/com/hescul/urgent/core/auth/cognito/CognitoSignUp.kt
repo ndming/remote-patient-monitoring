@@ -5,24 +5,13 @@ import com.amazonaws.ClientConfiguration
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserAttributes
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserPool
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GenericHandler
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.SignUpHandler
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.cognitoidentityprovider.model.SignUpResult
+import com.amazonaws.util.VersionInfoUtils
 import timber.log.Timber
 import java.lang.Exception
 
-
-
-object ConfirmationCallback : GenericHandler {
-    override fun onSuccess() {
-        Timber.tag(CognitoConfig.DEBUG_TAG).d("user has successfully confirmed!")
-    }
-
-    override fun onFailure(exception: Exception?) {
-        Timber.tag(CognitoConfig.DEBUG_TAG).e("confirmation failed: ${exception?.message}!")
-    }
-
-}
 
 /**
  * Setup AWS service configuration. The default parameter are set to value determined from the
@@ -34,10 +23,10 @@ object ConfirmationCallback : GenericHandler {
  * @param userAgent HTTP user agent header for AWS Java SDK clients
  */
 fun createClientConfiguration(
-    connectionTimeOut: Int = CognitoConfig.DEFAULT_CONNECTION_TIMEOUT,
-    socketTimeOut: Int = CognitoConfig.DEFAULT_SOCKET_TIMEOUT,
-    maxConnections: Int = CognitoConfig.DEFAULT_MAX_CONNECTIONS,
-    userAgent: String = CognitoConfig.DEFAULT_USER_AGENT
+    connectionTimeOut: Int = 15 * 1000,
+    socketTimeOut: Int = 15 * 1000,
+    maxConnections: Int = 10,
+    userAgent: String = VersionInfoUtils.getUserAgent()
 ): ClientConfiguration {
     val clientConfiguration = ClientConfiguration()
     clientConfiguration.connectionTimeout = connectionTimeOut
@@ -57,15 +46,13 @@ fun createClientConfiguration(
  */
 fun createCognitoUserPool(
     context: Context,
+    poolId: String,
+    clientId: String,
+    clientSecret: String,
+    clientRegion: Regions,
     clientConfig: ClientConfiguration = ClientConfiguration()
 ): CognitoUserPool {
-    return CognitoUserPool(context,
-        CognitoConfig.POOL_ID,
-        CognitoConfig.CLIENT_ID,
-        CognitoConfig.CLIENT_SECRET,
-        clientConfig,
-        CognitoConfig.REGION
-    )
+    return CognitoUserPool(context, poolId, clientId, clientSecret, clientConfig, clientRegion)
 }
 
 /**
@@ -86,31 +73,29 @@ fun signUpUser(
     userId: String,
     password: String,
     userAttributes: CognitoUserAttributes,
-    onSignUpSuccess: () -> Unit = {},
-    onSignUpFailure: (String?) -> Unit = {},
+    onSignUpSuccess: (CognitoUser, SignUpResult, CognitoUserAttributes) -> Unit,
+    onSignUpFailure: (String) -> Unit,
+    defaultFailCause: String = "Sign-up failed",
+    timberDebugTag: String = "authCognito",
 ) {
     val signUpCallback = object: SignUpHandler {
         override fun onSuccess(user: CognitoUser?, signUpResult: SignUpResult?) {
             // Sign-up was successful
-            Timber.tag(CognitoConfig.DEBUG_TAG).d("user has successfully signed up!")
-            onSignUpSuccess()
-            // This user has to be confirmed and a confirmation code was sent to the user
-            // cognitoUserCodeDeliveryDetails will indicate where the confirmation code was sent
-            // Get the confirmation code from user
-            if (signUpResult?.isUserConfirmed != true) {
-                Timber.tag(CognitoConfig.DEBUG_TAG).d("user has to be confirmed!")
-                Timber.tag(CognitoConfig.DEBUG_TAG).d("confirmation code method: ${signUpResult?.codeDeliveryDetails?.destination}")
+            Timber.tag(timberDebugTag).d("user has successfully signed up!")
+            if (user == null || signUpResult == null) {
+                onSignUpFailure(defaultFailCause)
             }
             else {
-                // The user has already been confirmed
-                Timber.tag(CognitoConfig.DEBUG_TAG).d("user has already been confirmed!")
+                onSignUpSuccess(user, signUpResult, userAttributes)
             }
+
         }
 
         override fun onFailure(exception: Exception?) {
             // Sign-up failed, check exception for the cause
-            Timber.tag(CognitoConfig.DEBUG_TAG).e("sign-up failed: ${exception?.message}!")
-            onSignUpFailure(exception?.message)
+            Timber.tag(timberDebugTag).e("sign-up failed: ${exception?.message}!")
+            val failCause = exception?.message ?: defaultFailCause
+            onSignUpFailure(failCause)
         }
 
     }
