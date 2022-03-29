@@ -22,9 +22,9 @@ import androidx.compose.ui.unit.sp
 fun LoadingButton(
     text: String,
     onClick: () -> Unit,
+    isLoading: Boolean,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    isLoading: Boolean = false,
     textFontSize: TextUnit = 15.sp,
     buttonWidth: Dp = 280.dp,
     buttonHeight: Dp = 58.dp,
