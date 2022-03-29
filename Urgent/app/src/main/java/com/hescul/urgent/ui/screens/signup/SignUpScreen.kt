@@ -49,7 +49,10 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.padding(vertical = innerPadding * 2))
         }
         SignUpButton(
-            onSignUp = onSignUpRequest,
+            onSignUp = {
+                signUpViewModel.onSignUpProgress()
+                onSignUpRequest()
+            },
             buttonEnable = signUpViewModel.isButtonEnable(),
             isProgressing = signUpViewModel.isProgressing
         )

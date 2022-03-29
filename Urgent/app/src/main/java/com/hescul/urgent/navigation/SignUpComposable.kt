@@ -28,7 +28,6 @@ fun NavGraphBuilder.signUpComposable(
             signUpViewModel = urgentViewModel.getSignUpViewModel(),
             modifier = modifier,
             onSignUpRequest = {
-                urgentViewModel.getSignUpViewModel().onSignUpProgress()
                 onSignUpRequest(localContext, navController, urgentViewModel, defaultFailCause)
             }
         )
