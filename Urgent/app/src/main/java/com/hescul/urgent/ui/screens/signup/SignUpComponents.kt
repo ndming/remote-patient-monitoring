@@ -1,9 +1,7 @@
 package com.hescul.urgent.ui.screens.signup
 
-import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.TweenSpec
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -12,7 +10,6 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -21,9 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserAttributes
-import com.amazonaws.services.cognitoidentityprovider.model.SignUpResult
 import com.hescul.urgent.R
 import com.hescul.urgent.ui.theme.UrgentTheme
 import com.hescul.urgent.ui.versatile.InfoFieldType
