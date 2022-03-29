@@ -1,5 +1,6 @@
 package com.hescul.urgent.ui.versatile
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -15,7 +16,23 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import com.hescul.urgent.R
 import com.hescul.urgent.ui.theme.UrgentTheme
+
+/**
+ * An enumerated type for [InfoTextField] metadata.
+ *
+ * @param label the label string displayed on the [InfoTextField]
+ * @param hint the placeholder text displayed on the [InfoTextField]
+ */
+enum class InfoFieldType(@StringRes val label: Int, @StringRes val hint: Int) {
+    NameField(R.string.ui_signUpScreen_userNameFieldLabel, R.string.ui_signUpScreen_userNameFieldHint),
+    EmailField(R.string.ui_signUpScreen_emailFieldLabel, R.string.ui_signUpScreen_emailFieldHint),
+    PasswordField(R.string.ui_signUpScreen_passwordFieldLabel, R.string.ui_signUpScreen_passwordFieldHint),
+    ConfirmPasswordField(R.string.ui_signUpScreen_confirmPasswordFieldLabel, R.string.ui_signUpScreen_confirmPasswordFieldHint),
+    ConfirmField(R.string.ui_confirmScreen_confirmFieldLabel, R.string.ui_confirmScreen_confirmFieldHint)
+}
+
 
 /**
  * Styled [OutlinedTextField] for inputting an information field to the app.
