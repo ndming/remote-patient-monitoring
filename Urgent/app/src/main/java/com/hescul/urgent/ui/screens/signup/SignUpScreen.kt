@@ -9,6 +9,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -19,40 +20,40 @@ import com.hescul.urgent.ui.theme.UrgentTheme
 fun SignUpScreen(
     signUpViewModel: SignUpViewModel,
     modifier: Modifier = Modifier,
-    sidePadding: Dp = 40.dp
+    innerPadding: Dp = 5.dp,
+    onSignUpRequest: () -> Unit,
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = sidePadding)
+            .fillMaxSize()
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        SignUpHeader()
+        SignUpHeader(headerInnerPadding = innerPadding)
         SignUpInfoField(
             signUpViewModel = signUpViewModel,
             modifier = Modifier,
-            enableEdit = !signUpViewModel.isProgressing
+            enableEdit = !signUpViewModel.isProgressing,
+            innerPadding = innerPadding
         )
         AnimatedVisibility(visible = signUpViewModel.failCause.isNotEmpty()) {
-            if (signUpViewModel.failCause.isNotEmpty()) {
-                Text(
-                    text = signUpViewModel.failCause,
-                    color = MaterialTheme.colors.error,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                )
-            }
+            Text(
+                text = signUpViewModel.failCause,
+                color = MaterialTheme.colors.error,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(innerPadding * 2)
+            )
         }
-
-        Spacer(modifier = Modifier.padding(vertical = 40.dp))
+        AnimatedVisibility(visible = signUpViewModel.failCause.isEmpty()) {
+            Spacer(modifier = Modifier.padding(vertical = innerPadding * 2))
+        }
         SignUpButton(
-            onSignUp = signUpViewModel::onSignUpRequest,
+            onSignUp = onSignUpRequest,
             buttonEnable = signUpViewModel.isButtonEnable(),
             isProgressing = signUpViewModel.isProgressing
         )
-        SignUpFooter()
+        SignUpFooter(footerPadding = innerPadding * 2)
     }
 
 }
@@ -65,40 +66,32 @@ fun SignUpInfoField(
     enableEdit: Boolean = true,
 ) {
     Column(
-        modifier = modifier
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         UserNameField(
             text = signUpViewModel.userNameTextInput,
             onTextChange = signUpViewModel::onNameTextInputChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = innerPadding),
             enableEdit = enableEdit
         )
+        Spacer(modifier = Modifier.padding(vertical = innerPadding))
         EmailField(
             text = signUpViewModel.emailTextInput,
             onTextChange = signUpViewModel::onEmailTextInputChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = innerPadding),
             isError = signUpViewModel.isEmailError(),
             enableEdit = enableEdit
         )
+        Spacer(modifier = Modifier.padding(vertical = innerPadding))
         PasswordField(
             text = signUpViewModel.passwordTextInput,
             onTextChange = signUpViewModel::onPasswordTextInputChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = innerPadding),
             isError = signUpViewModel.isPasswordError(),
             enableEdit = enableEdit
         )
+        Spacer(modifier = Modifier.padding(vertical = innerPadding))
         ConfirmPasswordField(
             text = signUpViewModel.confirmPasswordTextInput,
             onTextChange = signUpViewModel::onConfirmPasswordTextInputChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = innerPadding),
             isError = signUpViewModel.isConfirmPasswordError(),
             enableEdit = enableEdit
         )
@@ -122,7 +115,10 @@ fun PreviewSignUpScreen() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colors.background
         ) {
-            SignUpScreen(signUpViewModel = signUpViewModel)
+            SignUpScreen(
+                signUpViewModel = signUpViewModel,
+                onSignUpRequest = {}
+            )
         }
     }
 }
