@@ -1,24 +1,13 @@
 package com.hescul.urgent.ui.screens.signup
 
-import android.app.Application
-import android.content.Context
-import android.content.res.Resources
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
-import com.hescul.urgent.R
-import com.hescul.urgent.core.auth.cognito.createClientConfiguration
-import com.hescul.urgent.core.auth.cognito.createCognitoAttribute
-import com.hescul.urgent.core.auth.cognito.createCognitoUserPool
-import com.hescul.urgent.core.auth.cognito.signUpUser
 import com.hescul.urgent.core.utils.InfoValidator
 
 
-class SignUpViewModel() : ViewModel() {
+class SignUpViewModel : ViewModel() {
     var userNameTextInput by mutableStateOf("")
         private set
     var emailTextInput by mutableStateOf("")
@@ -59,29 +48,20 @@ class SignUpViewModel() : ViewModel() {
             && confirmPasswordTextInput == passwordTextInput
             && !isProgressing
 
-    fun onSignUpRequest(localContext: Context) {
+    fun onSignUpProgress() {
         failCause = ""
         isProgressing = true
-        val clientAttribute = createCognitoAttribute(
-            email = emailTextInput,
-            name = userNameTextInput,
-        )
-        val userPool = createCognitoUserPool(localContext, createClientConfiguration())
-        signUpUser(
-            userPool = userPool,
-            userId = emailTextInput,
-            password = passwordTextInput,
-            userAttributes = clientAttribute,
-            onSignUpSuccess = this::onSignUpSuccess,
-            onSignUpFailure = this::onSignUpFailure
-        )
     }
 
-    private fun onSignUpSuccess() {
+    fun reset() {
         isProgressing = false
+        passwordTextInput = ""
+        confirmPasswordTextInput = ""
+        failCause = ""
     }
-    private fun onSignUpFailure(cause: String?) {
+
+    fun onSignUpFailure(cause: String) {
         isProgressing = false
-        failCause = cause?.substringBefore('(') ?: Resources.getSystem().getString(R.string.ui_signUpScreen_unknownFailCause)
+        failCause = cause
     }
 }
