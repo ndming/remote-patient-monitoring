@@ -1,63 +1,59 @@
 package com.hescul.urgent
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.navigation.compose.rememberNavController
-import com.hescul.urgent.model.UrgentViewModel
-import com.hescul.urgent.model.UrgentViewModelFactory
+import com.amazonaws.ClientConfiguration
+import com.hescul.urgent.core.auth.cognito.CognitoAuthenticator
+import com.hescul.urgent.core.auth.cognito.CognitoConfig
+import com.hescul.urgent.core.auth.cognito.CognitoIdentity
 import com.hescul.urgent.navigation.UrgentNavHost
 import com.hescul.urgent.navigation.UrgentScreen
 import com.hescul.urgent.ui.screens.confirm.ConfirmViewModel
+import com.hescul.urgent.ui.screens.login.LoginViewModel
 import com.hescul.urgent.ui.screens.signup.SignUpViewModel
-import com.hescul.urgent.ui.theme.UrgentTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val urgentViewModel = initViewModels()
+        val vms = initViewModels()
+        val cognito = initCognito(applicationContext)
         setContent {
-            UrgentApp(urgentViewModel)
+            UrgentNavHost(
+                startDestination = UrgentScreen.Login.name,
+                cognito = cognito,
+                viewModels = vms,
+            )
         }
 
     }
 
-    private fun initViewModels(): UrgentViewModel {
+    private fun initViewModels(): UrgentViewModels {
         val signUpViewModel by viewModels<SignUpViewModel>()
         val confirmViewModel by viewModels<ConfirmViewModel>()
-        val factory = UrgentViewModelFactory(
+        val loginViewModel by viewModels<LoginViewModel>()
+        return UrgentViewModels(
+            loginViewModel = loginViewModel,
             signUpViewModel = signUpViewModel,
             confirmViewModel = confirmViewModel
         )
-        val urgentViewModel by viewModels<UrgentViewModel>(
-            factoryProducer = { factory }
+    }
+
+    private fun initCognito(context: Context): CognitoAuthenticator {
+        val cognitoIdentity = CognitoIdentity(
+            poolId = CognitoConfig.POOL_ID,
+            clientId = CognitoConfig.CLIENT_ID,
+            clientSecret = CognitoConfig.CLIENT_SECRET,
+            region = CognitoConfig.REGION
         )
-        return urgentViewModel
+        val cognitoConfig = ClientConfiguration()
+        cognitoConfig.connectionTimeout = CognitoConfig.CONNECTION_TIMEOUT
+        cognitoConfig.socketTimeout = CognitoConfig.SOCKET_TIMEOUT
+        cognitoConfig.maxConnections = CognitoConfig.MAX_CONNECTIONS
+        cognitoConfig.userAgent = CognitoConfig.USER_AGENT
+        return CognitoAuthenticator(context, cognitoIdentity, cognitoConfig)
     }
 }
 
-@Composable
-fun UrgentApp(
-    urgentViewModel: UrgentViewModel,
-) {
-    UrgentTheme {
-        //val allScreens = UrgentScreen.values().toList()
-        val navController = rememberNavController()
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colors.background
-        ) {
-            UrgentNavHost(
-                navController = navController,
-                startDestination = UrgentScreen.SignUp.name,
-                urgentViewModel = urgentViewModel,
-            )
-        }
-    }
-}
