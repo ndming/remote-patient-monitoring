@@ -8,7 +8,7 @@ import com.hescul.urgent.core.utils.InfoValidator
 
 
 class SignUpViewModel : ViewModel() {
-    var userNameTextInput by mutableStateOf("")
+    var nameTextInput by mutableStateOf("")
         private set
     var emailTextInput by mutableStateOf("")
         private set
@@ -22,7 +22,7 @@ class SignUpViewModel : ViewModel() {
         private set
 
     fun onNameTextInputChange(text: String) {
-        userNameTextInput = text
+        nameTextInput = text
     }
     fun onEmailTextInputChange(text: String) {
         emailTextInput = text
@@ -58,6 +58,10 @@ class SignUpViewModel : ViewModel() {
         passwordTextInput = ""
         confirmPasswordTextInput = ""
         failCause = ""
+    }
+
+    fun onSignUpSuccess() {
+        isProgressing = false
     }
 
     fun onSignUpFailure(cause: String) {
