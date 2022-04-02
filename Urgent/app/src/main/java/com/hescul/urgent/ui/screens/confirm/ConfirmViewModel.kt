@@ -7,6 +7,13 @@ import androidx.lifecycle.ViewModel
 import com.hescul.urgent.core.utils.InfoValidator
 
 class ConfirmViewModel : ViewModel() {
+    var userId = "???"
+        private set
+    var medium = "???"
+        private set
+    var destination = "???"
+        private set
+
     var confirmCodeTextInput by mutableStateOf("")
         private set
     var isProgressing by mutableStateOf(false)
@@ -43,5 +50,11 @@ class ConfirmViewModel : ViewModel() {
         isProgressing = false
         isConfirmSucceeded = false
         failCause = ""
+    }
+
+    fun updateConfirmationIdentity(userId: String, medium: String, destination: String) {
+        this.userId = userId
+        this.medium = medium
+        this.destination = destination
     }
 }
