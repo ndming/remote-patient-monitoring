@@ -5,10 +5,17 @@
     <string name="cd_lockIcon">Lock Icon</string>
     <string name="cd_visibilityIcon">Visibility Icon</string>
     <string name="cd_visibilityOffIcon">Visibility Off Icon</string>
+    <string name="cd_arrowBackIosIcon">Arrow Back Ios Icon</string>
+    <string name="cd_navigateBeforeIcon">Navigate To Previous Screen</string>
+    <string name="cd_radioButtonCheckedIcon">Radio Button Check Icon</string>
+    <string name="cd_moreHorizontalIcon">More Content</string>
 
+    <string name="ui_homeScreen_title">Home</string>
+
+    <string name="ui_signUpScreen_title">Sign Up</string>
     <string name="ui_signUpScreen_defaultFailCause">Sign up failed. Please try again.</string>
-    <string name="ui_signUpScreen_userNameFieldLabel">Username</string>
-    <string name="ui_signUpScreen_userNameFieldHint">Enter a name of your choice</string>
+    <string name="ui_signUpScreen_userNameFieldLabel">Name</string>
+    <string name="ui_signUpScreen_userNameFieldHint">Enter your name</string>
     <string name="ui_signUpScreen_emailFieldLabel">Email</string>
     <string name="ui_signUpScreen_emailFieldHint">Enter your email</string>
     <string name="ui_signUpScreen_passwordFieldLabel">Password</string>
@@ -18,7 +25,7 @@
     <string name="ui_signUpScreen_signUpButton">Continue</string>
 
     <string name="ui_confirmScreen_defaultFailCause">Confirmation failed</string>
-    <string name="ui_confirmScreen_greeting">Greetings,</string>
+    <string name="ui_confirmScreen_greeting">Confirm Signup</string>
     <string name="ui_confirmScreen_confirmInstruction">A confirmation code was sent to your</string>
     <string name="ui_confirmScreen_confirmFieldLabel">Code</string>
     <string name="ui_confirmScreen_confirmFieldHint">Enter the confirmation code</string>
@@ -26,6 +33,14 @@
     <string name="ui_confirmScreen_backToLoginButton">Back to LOGIN page</string>
     <string name="ui_confirmScreen_defaultUserName">Urgent User</string>
     <string name="ui_confirmScreen_defaultConfirmMethod">sign-up method</string>
-    <string name="ui_confirmScreen_confirmSuccessMessage">Verified successfully!</string>
-    <string name="ui_confirmScreen_skipConfirmationButton">Skip for now</string>
+    <string name="ui_confirmScreen_confirmSuccessMessage">Confirmed successfully!</string>
+
+    <string name="ui_loginScreen_header">Welcome Back</string>
+    <string name="ui_loginScreen_subHeader">Sign in with your email and password</string>
+    <string name="ui_loginScreen_footer">Don\'t have an account?</string>
+    <string name="ui_loginScreen_signUpButton">Sign Up</string>
+    <string name="ui_loginScreen_loginButton">Continue</string>
+    <string name="ui_loginScreen_defaultFailCause">Login failed</string>
+    <string name="ui_loginScreen_confirmButton">Resend</string>
+    <string name="ui_loginScreen_missingConfirmationCodeMessage">Missed the confirmation code?</string>
 </resources>
