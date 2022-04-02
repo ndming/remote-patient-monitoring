@@ -9,11 +9,14 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.hescul.urgent.R
 import com.hescul.urgent.ui.theme.UrgentTheme
+import com.hescul.urgent.ui.versatile.UrgentTopBar
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -24,40 +27,52 @@ fun SignUpScreen(
     onSignUpRequest: () -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
-        SignUpHeader(headerInnerPadding = innerPadding)
-        SignUpInfoField(
-            signUpViewModel = signUpViewModel,
-            modifier = Modifier,
-            enableEdit = !signUpViewModel.isProgressing,
-            innerPadding = innerPadding
+        UrgentTopBar(
+            title = stringResource(id = R.string.ui_signUpScreen_title),
+            onNavigateBack = { /*TODO*/ },
+            onLeftActionClick = { /*TODO*/ },
+            onRightActionClick = { /*TODO*/ }
         )
-        AnimatedVisibility(visible = signUpViewModel.failCause.isNotEmpty()) {
-            Text(
-                text = signUpViewModel.failCause,
-                color = MaterialTheme.colors.error,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(innerPadding * 2)
+        Spacer(modifier = Modifier.padding(vertical = 20.dp))
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            SignUpHeader(headerInnerPadding = innerPadding)
+            SignUpInfoField(
+                signUpViewModel = signUpViewModel,
+                modifier = Modifier,
+                enableEdit = !signUpViewModel.isProgressing,
+                innerPadding = innerPadding
             )
+            AnimatedVisibility(visible = signUpViewModel.failCause.isNotEmpty()) {
+                Text(
+                    text = signUpViewModel.failCause,
+                    color = MaterialTheme.colors.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(innerPadding * 2)
+                )
+            }
+            AnimatedVisibility(visible = signUpViewModel.failCause.isEmpty()) {
+                Spacer(modifier = Modifier.padding(vertical = innerPadding * 2))
+            }
+            SignUpButton(
+                onSignUp = {
+                    signUpViewModel.onSignUpProgress()
+                    onSignUpRequest()
+                },
+                buttonEnable = signUpViewModel.isButtonEnable(),
+                isProgressing = signUpViewModel.isProgressing
+            )
+            SignUpFooter(footerPadding = innerPadding * 2)
         }
-        AnimatedVisibility(visible = signUpViewModel.failCause.isEmpty()) {
-            Spacer(modifier = Modifier.padding(vertical = innerPadding * 2))
-        }
-        SignUpButton(
-            onSignUp = {
-                signUpViewModel.onSignUpProgress()
-                onSignUpRequest()
-            },
-            buttonEnable = signUpViewModel.isButtonEnable(),
-            isProgressing = signUpViewModel.isProgressing
-        )
-        SignUpFooter(footerPadding = innerPadding * 2)
     }
+
 
 }
 
@@ -73,7 +88,7 @@ fun SignUpInfoField(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         UserNameField(
-            text = signUpViewModel.userNameTextInput,
+            text = signUpViewModel.nameTextInput,
             onTextChange = signUpViewModel::onNameTextInputChange,
             enableEdit = enableEdit
         )
