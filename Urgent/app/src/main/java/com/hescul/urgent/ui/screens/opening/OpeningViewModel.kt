@@ -4,12 +4,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.delay
 
 class OpeningViewModel : ViewModel() {
-    var isLaunched by mutableStateOf(false)
-        private set
-
-    fun onLaunch() {
-        isLaunched = true
+    companion object {
+        private const val OPENING_DURATION = 1000L  // in ms
     }
+
+    suspend fun showOpening(onDone: () -> Unit) {
+        delay(OPENING_DURATION)
+        onDone()
+    }
+
+
 }
