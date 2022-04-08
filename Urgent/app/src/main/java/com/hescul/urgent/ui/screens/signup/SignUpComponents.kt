@@ -24,7 +24,6 @@ import com.hescul.urgent.ui.versatile.InfoFieldType
 import com.hescul.urgent.ui.versatile.InfoTextField
 import com.hescul.urgent.ui.versatile.LoadingButton
 import com.hescul.urgent.ui.versatile.config.LoadingButtonConfig
-import com.hescul.urgent.ui.versatile.config.ViewConfig
 
 
 @Composable
@@ -196,9 +195,9 @@ fun SignUpButton(
         enabled = buttonEnable,
         isLoading = isProgressing,
         textFontSize = LoadingButtonConfig.TEXT_FONT_SIZE.sp,
-        buttonWidth = ViewConfig.TEXT_FIELD_DEFAULT_WIDTH.dp,
-        buttonHeight = ViewConfig.TEXT_FIELD_DEFAULT_HEIGHT.dp,
-        loadingWidth = ViewConfig.CIRCULAR_PROGRESS_INDICATOR_DEFAULT_WIDTH.dp,
+        buttonWidth = LoadingButtonConfig.DEFAULT_WIDTH.dp,
+        buttonHeight = LoadingButtonConfig.DEFAULT_HEIGHT.dp,
+        loadingWidth = LoadingButtonConfig.PROGRESS_WIDTH.dp,
         transitionDuration = LoadingButtonConfig.STATE_TRANSITION_DURATION,
         textEnterTransition = fadeIn(animationSpec = TweenSpec(delay = LoadingButtonConfig.TEXT_FADE_IN_DELAY)),
     )
