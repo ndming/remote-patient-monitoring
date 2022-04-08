@@ -20,10 +20,12 @@ import com.hescul.urgent.ui.theme.UrgentTheme
 @Composable
 fun UrgentTopBar(
     title: String,
-    onNavigateBack: () -> Unit,
     onLeftActionClick: () -> Unit,
     onRightActionClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateBack: () -> Unit = {},
+    showNavigateBack: Boolean = false,
+    enableNavigateBack: Boolean = false,
 ) {
     TopAppBar(
         modifier = modifier,
@@ -35,16 +37,19 @@ fun UrgentTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row() {
+            Row {
                 IconButton(
-                    onClick = onNavigateBack
+                    onClick = onNavigateBack,
+                    enabled = showNavigateBack && enableNavigateBack
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowBackIos,
-                        contentDescription = stringResource(id = R.string.cd_arrowBackIosIcon)
-                    )
+                    if (showNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBackIos,
+                            contentDescription = stringResource(id = R.string.cd_arrowBackIosIcon)
+                        )
+                    }
                 }
-                IconButton(
+                IconButton( // for arrangement purpose only
                     onClick = {},
                     enabled = false,
                 ) {}
@@ -52,9 +57,9 @@ fun UrgentTopBar(
             Text(
                 text = title,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.h5.copy(fontWeight = FontWeight.Medium)
+                style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.SemiBold),
             )
-            Row() {
+            Row {
                 IconButton(onClick = onLeftActionClick) {
                     Icon(
                         imageVector = Icons.Filled.MoreHoriz,
