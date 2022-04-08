@@ -1,6 +1,8 @@
 package com.hescul.urgent.ui.versatile
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -16,6 +18,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.hescul.urgent.R
 import com.hescul.urgent.ui.theme.UrgentTheme
 
@@ -58,6 +62,8 @@ fun InfoTextField(
     fieldType: InfoFieldType,
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    fieldWidth: Dp = 280.dp,
+    fieldHeight: Dp = 58.dp,
     enabled: Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Done,
@@ -101,6 +107,8 @@ fun InfoTextField(
         isError = isError,
         visualTransformation = visualTransform,
         modifier = modifier
+            .width(fieldWidth)
+            .height(fieldHeight)
     )
 }
 
