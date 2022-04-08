@@ -9,8 +9,14 @@
     <string name="cd_navigateBeforeIcon">Navigate To Previous Screen</string>
     <string name="cd_radioButtonCheckedIcon">Radio Button Check Icon</string>
     <string name="cd_moreHorizontalIcon">More Content</string>
-
-    <string name="ui_homeScreen_title">Home</string>
+    <string name="cd_addIcon">Add</string>
+    <string name="cd_circleSeparateIcon">Circle</string>
+    <string name="cd_favoriteIcon">Heart</string>
+    <string name="cd_bloodTypeIcon">Oxygen</string>
+    <string name="cd_patientPicture">Patient Avatar</string>
+    <string name="cd_circleOnlineIcon">Status Online</string>
+    <string name="cd_circleOfflineIcon">Status Offline</string>
+    <string name="cd_circleErrorIcon">Status Error</string>
 
     <string name="ui_signUpScreen_title">Sign Up</string>
     <string name="ui_signUpScreen_defaultFailCause">Sign up failed. Please try again.</string>
@@ -43,4 +49,17 @@
     <string name="ui_loginScreen_defaultFailCause">Login failed</string>
     <string name="ui_loginScreen_confirmButton">Resend</string>
     <string name="ui_loginScreen_missingConfirmationCodeMessage">Missed the confirmation code?</string>
+    <string name="ui_loginScreen_resendSignUpConfirmationDefaultFailCause">Failed to resend sign-up confirmation code</string>
+
+    <string name="ui_homeScreen_title">Home</string>
+    <string name="ui_homeScreen_fabExtended">PATIENT</string>
+    <string name="ui_homeScreen_maleGender">Male</string>
+    <string name="ui_homeScreen_femaleGender">Female</string>
+    <string name="ui_homeScreen_ageTrailing">years-old</string>
+    <string name="ui_homeScreen_contentTitle">Patient profiles</string>
+
+    <string name="ui_profileScreen_pulseIndexName">Heart Rate</string>
+    <string name="ui_profileScreen_pulseIndexUnit">bpm</string>
+    <string name="ui_profileScreen_spo2IndexName">SpO2</string>
+    <string name="ui_profileScreen_spo2IndexUnit">%</string>
 </resources>
