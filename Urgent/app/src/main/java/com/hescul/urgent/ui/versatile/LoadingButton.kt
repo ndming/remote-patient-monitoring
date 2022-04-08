@@ -1,9 +1,8 @@
 package com.hescul.urgent.ui.versatile
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateValueAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.*
@@ -27,24 +26,24 @@ fun LoadingButton(
     enabled: Boolean = true,
     textFontSize: TextUnit = 15.sp,
     buttonWidth: Dp = 280.dp,
-    buttonHeight: Dp = 58.dp,
+    buttonHeight: Dp = 54.dp,
     buttonColors: ButtonColors = ButtonDefaults.buttonColors(),
     loadingWidth: Dp = 80.dp,
     loadingColor: Color = MaterialTheme.colors.onPrimary,
     transitionDuration: Int = 500,
-    textEnterTransition: EnterTransition = fadeIn(animationSpec = TweenSpec(delay = 60)),
+    textEnterTransition: EnterTransition = fadeIn(animationSpec = tween(delayMillis = 60)),
     textExitTransition: ExitTransition = ExitTransition.None,
     loadingEnterTransition: EnterTransition = EnterTransition.None,
     loadingExitTransition: ExitTransition = ExitTransition.None,
 ) {
     val width by animateDpAsState(
         targetValue = if (isLoading) loadingWidth else buttonWidth,
-        animationSpec = TweenSpec(durationMillis = transitionDuration)
+        animationSpec = tween(durationMillis = transitionDuration)
     )
     val backgroundColor by animateColorAsState(
         targetValue = if (enabled) buttonColors.backgroundColor(enabled = true).value
             else buttonColors.backgroundColor(enabled = false).value,
-        animationSpec = TweenSpec(durationMillis = transitionDuration)
+        animationSpec = tween(durationMillis = transitionDuration)
     )
     Button(
         onClick = onClick,

@@ -20,4 +20,20 @@ object LoadingButtonConfig {
      * in the [LoadingButton] composable
      */
     const val TEXT_FONT_SIZE = 15
+
+    /**
+     * The default width of the [LoadingButton] composable
+     */
+    const val DEFAULT_WIDTH = 280
+
+    /**
+     * The default height of the [LoadingButton] composable
+     */
+    const val DEFAULT_HEIGHT = 54
+
+    /**
+     * The width of the [LoadingButton] composable when it is
+     * in progress state
+     */
+    const val PROGRESS_WIDTH = 80
 }

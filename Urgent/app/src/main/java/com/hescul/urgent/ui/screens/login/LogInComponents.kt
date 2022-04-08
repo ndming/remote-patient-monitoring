@@ -36,7 +36,7 @@ fun LoginHeader(
             text = stringResource(id = R.string.ui_loginScreen_subHeader),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.caption,
-            color = MaterialTheme.colors.onSurface.copy(0.5f),
+            color = MaterialTheme.colors.onSurface.copy(0.6f),
             modifier = Modifier.padding(vertical = innerPadding)
         )
     }
