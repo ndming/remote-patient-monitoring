@@ -30,8 +30,8 @@ import com.hescul.urgent.ui.versatile.config.LoadingButtonConfig
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun LoginScreen(
-    loginViewModel: LogInViewModel,
-    onLogInDone: (CognitoUserSession) -> Unit,
+    loginViewModel: LoginViewModel,
+    onLoginDone: (CognitoUserSession) -> Unit,
     onResendSignUpConfirmationDone: (String, CognitoUserCodeDeliveryDetails) -> Unit,
     onNavigateToSignUp: () -> Unit,
     modifier: Modifier = Modifier
@@ -79,7 +79,7 @@ fun LoginScreen(
         LoadingButton(
             text = stringResource(id = R.string.ui_loginScreen_loginButton),
             onClick = {
-                loginViewModel.onLogInRequest(localContext, onLogInDone)
+                loginViewModel.onLogInRequest(localContext, onLoginDone)
             },
             enabled = loginViewModel.isButtonEnabled(),
             isLoading = loginViewModel.isProgressing,
@@ -141,14 +141,14 @@ fun LoginScreen(
 @Preview("Login Screen")
 @Composable
 fun PreviewLoginScreen() {
-    val loginViewModel = LogInViewModel()
+    val loginViewModel = LoginViewModel()
     loginViewModel.onEmailTextInputChange("example@email.com")
     loginViewModel.onPasswordTextInputChange("password")
     UrgentTheme {
         Surface {
             LoginScreen(
                 loginViewModel = loginViewModel,
-                onLogInDone = {},
+                onLoginDone = {},
                 onNavigateToSignUp = {},
                 onResendSignUpConfirmationDone = {_, _ ->},
             )

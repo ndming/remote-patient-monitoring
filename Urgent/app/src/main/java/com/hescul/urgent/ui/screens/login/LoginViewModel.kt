@@ -13,7 +13,7 @@ import com.hescul.urgent.core.auth.cognito.CognitoAuthenticator
 import com.hescul.urgent.core.utils.InfoValidator
 import com.hescul.urgent.ui.screens.signup.SignUpScreen
 
-class LogInViewModel : ViewModel() {
+class LoginViewModel : ViewModel() {
     companion object {
         private const val USER_NOT_CONFIRMED_MESSAGE = "User is not confirmed"
     }
