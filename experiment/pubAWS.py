@@ -5,12 +5,12 @@ ENDPOINT = "a2r0f2fq44oocy-ats.iot.us-east-1.amazonaws.com"    # endpoint
 HOSTPORT = 8883                                                # non web-socket
 
 CLIENT_ID = "RPMSOS0000"
-DATA_TOPIC = f"rpm/soss/{CLIENT_ID}"
+DATA_TOPIC = f"rpm/sos/{CLIENT_ID}"
 STAT_TOPIC = f"rpm/tus/{CLIENT_ID}"
 PUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
 
-NUM_OF_REPETITIONS = 1
-PUBLISH_DELAY = 0  # in sec
+NUM_OF_REPETITIONS = 30
+PUBLISH_DELAY = 10  # in sec
 MAX_RECONNECTION_ATTEMPTS = 2
 
 CERTI_PATH_0000 = 'auth/RPMSOS0000/69a713daa8a9d05b477ea0172939360fff01619c064b7720f2ec5882503a79ee-certificate.pem.crt'
@@ -28,14 +28,10 @@ DATA_MESSAGE = {
             "value": None,
             "unit": "bpm",
         },
-        "oxi": {
+        "spo2": {
             "value": None,
             "unit": "%",
-        },
-        "temper": {
-            "value": None,
-            "unit": "\u00b0C",
-        },
+        }
     },
 }
 
@@ -46,7 +42,7 @@ STAT_MESSAGE = {
 
 WILL_MESSAGE = {
     "cid": CLIENT_ID,
-    "code": 2
+    "code": 1
 }
 
 isFailed = False
@@ -58,7 +54,7 @@ def onConnectionInterrupted(connection: mqtt.Connection, error: exceptions.AwsCr
         *   `error` (:class:`awscrt.exceptions.AwsCrtError`): Exception which caused connection loss.
         *   `**kwargs` (dict): Forward-compatibility kwargs.
     """
-    print(f"[C] connection interrupted: {error.message}")
+    print(f"[C] {error.name}: {error.message}")
     global isFailed
     isFailed = True
 
@@ -81,7 +77,6 @@ def getDataMessage() -> dict:
     mess = DATA_MESSAGE
     mess['data']['pulse']['value'] = round(random.uniform(65.5, 75.5), 1)
     mess['data']['oxi']['value'] = round(random.uniform(85.5, 95.5), 1)
-    mess['data']['temper']['value'] = round(random.uniform(36.5, 38.5), 1)
     mess['time'] = time.time()
     # print("your message:")
     # print(json.dumps(mess, indent=2))
@@ -103,7 +98,7 @@ def publishMessage(cn: mqtt.Connection, topic: str, message: dict):
     publishFuture = publishTuple[0]
     while not publishFuture.done():
         if isFailed:
-            raise exceptions.AwsCrtError(code=None, name="AWS_ERROR_PUBLISH", message="unauthorized topic")
+            raise exceptions.AwsCrtError(code=None, name="AWS_PUBLISH_ERROR", message="unauthorized topic")
     publishResult = publishFuture.result()
     print(f"[P] published to topic<{topic}>: packet_id<{publishResult['packet_id']}>")
 
