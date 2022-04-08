@@ -9,11 +9,14 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser
+import com.amazonaws.services.cognitoidentityprovider.model.SignUpResult
 import com.hescul.urgent.R
 import com.hescul.urgent.ui.theme.UrgentTheme
 import com.hescul.urgent.ui.versatile.UrgentTopBar
@@ -22,28 +25,34 @@ import com.hescul.urgent.ui.versatile.UrgentTopBar
 @Composable
 fun SignUpScreen(
     signUpViewModel: SignUpViewModel,
+    onSignUpDone: (CognitoUser, SignUpResult) -> Unit,
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    innerPadding: Dp = 5.dp,
-    onSignUpRequest: () -> Unit,
 ) {
+    val localContext = LocalContext.current
+    val contentPadding = 20.dp
+    val innerPadding = 5.dp
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         UrgentTopBar(
             title = stringResource(id = R.string.ui_signUpScreen_title),
-            onNavigateBack = { /*TODO*/ },
-            onLeftActionClick = { /*TODO*/ },
-            onRightActionClick = { /*TODO*/ }
+            onNavigateBack = onNavigateBack,
+            onLeftActionClick = {},
+            onRightActionClick = {},
+            showNavigateBack = true,
+            enableNavigateBack = !signUpViewModel.isProgressing
         )
-        Spacer(modifier = Modifier.padding(vertical = 20.dp))
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             SignUpHeader(headerInnerPadding = innerPadding)
+            Spacer(modifier = Modifier.padding(vertical = contentPadding))
             SignUpInfoField(
                 signUpViewModel = signUpViewModel,
                 modifier = Modifier,
@@ -63,12 +72,15 @@ fun SignUpScreen(
             }
             SignUpButton(
                 onSignUp = {
-                    signUpViewModel.onSignUpProgress()
-                    onSignUpRequest()
+                    signUpViewModel.onSignUpRequest(
+                        context = localContext,
+                        onSignUpDone = onSignUpDone
+                    )
                 },
                 buttonEnable = signUpViewModel.isButtonEnable(),
                 isProgressing = signUpViewModel.isProgressing
             )
+            Spacer(modifier = Modifier.padding(vertical = contentPadding))
             SignUpFooter(footerPadding = innerPadding * 2)
         }
     }
@@ -77,7 +89,7 @@ fun SignUpScreen(
 }
 
 @Composable
-fun SignUpInfoField(
+private fun SignUpInfoField(
     signUpViewModel: SignUpViewModel,
     modifier: Modifier = Modifier,
     innerPadding: Dp = 5.dp,
@@ -119,8 +131,6 @@ fun SignUpInfoField(
 
 @Preview(
     name = "Sign Up Screen",
-    widthDp = 720,
-    heightDp = 1280
 )
 @Composable
 fun PreviewSignUpScreen() {
@@ -135,7 +145,8 @@ fun PreviewSignUpScreen() {
         ) {
             SignUpScreen(
                 signUpViewModel = signUpViewModel,
-                onSignUpRequest = {}
+                onSignUpDone = {_, _ -> },
+                onNavigateBack = {},
             )
         }
     }

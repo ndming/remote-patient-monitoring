@@ -9,29 +9,25 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.hescul.urgent.R
 import com.hescul.urgent.core.utils.InfoValidator
 import com.hescul.urgent.ui.theme.UrgentTheme
-import com.hescul.urgent.ui.versatile.config.LoadingButtonConfig
-import com.hescul.urgent.ui.versatile.config.ViewConfig
+import com.hescul.urgent.ui.versatile.config.InfoTextFieldConfig
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun ConfirmScreen(
     confirmViewModel: ConfirmViewModel,
-    confirmMedium: String,
-    confirmDestination: String,
-    onConfirmRequest: () -> Unit,
-    modifier: Modifier = Modifier,
-    innerPadding: Dp = 5.dp,
-    onBackToLogInPressed: () -> Unit = {},
+    onBackToLogIn: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val localContext = LocalContext.current
+    val innerPadding = 5.dp
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -42,13 +38,12 @@ fun ConfirmScreen(
         ConfirmCodeField(
             text = confirmViewModel.confirmCodeTextInput,
             onTextChange = confirmViewModel::onConfirmTextInputChange,
-            confirmMedium = confirmMedium,
-            confirmDestination = confirmDestination,
+            confirmMedium = confirmViewModel.medium,
+            confirmDestination = confirmViewModel.destination,
             enableEdit = !confirmViewModel.isProgressing,
             onConfirmRequest = {
                 if (!confirmViewModel.isConfirmSucceeded) {
-                    confirmViewModel.onConfirmProgress()
-                    onConfirmRequest()
+                    confirmViewModel.onConfirmSignUpRequest(localContext)
                 }
             },
             isError = confirmViewModel.isConfirmCodeError()
@@ -67,8 +62,7 @@ fun ConfirmScreen(
         ConfirmButton(
             onConfirmRequest = {
                 if (!confirmViewModel.isConfirmSucceeded) {
-                    confirmViewModel.onConfirmProgress()
-                    onConfirmRequest()
+                    confirmViewModel.onConfirmSignUpRequest(localContext)
                 }
             },
             isProgressing = confirmViewModel.isProgressing,
@@ -79,16 +73,15 @@ fun ConfirmScreen(
         Spacer(modifier = Modifier.padding(vertical = innerPadding))
         AnimatedVisibility(visible = confirmViewModel.isConfirmSucceeded) {
             OutlinedButton(
-                onClick = onBackToLogInPressed,
+                onClick = onBackToLogIn,
                 modifier = Modifier
-                    .width(ViewConfig.TEXT_FIELD_DEFAULT_WIDTH.dp)
-                    .height(ViewConfig.TEXT_FIELD_DEFAULT_HEIGHT.dp),
+                    .width(InfoTextFieldConfig.WIDTH.dp)
+                    .height(InfoTextFieldConfig.HEIGHT.dp),
                 enabled = !confirmViewModel.isProgressing,
             ) {
                 Text(
                     text = stringResource(id = R.string.ui_confirmScreen_backToLoginButton),
                     textAlign = TextAlign.Center,
-                    fontSize = LoadingButtonConfig.TEXT_FONT_SIZE.sp
                 )
             }
         }
@@ -99,20 +92,21 @@ fun ConfirmScreen(
 
 
 @Preview(
-    name = "Sign Up Screen",
-    widthDp = 720,
-    heightDp = 1280,
+    name = "Confirm Screen",
 )
 @Composable
 fun PreviewConfirmScreen() {
     val confirmViewModel = ConfirmViewModel()
+    confirmViewModel.updateConfirmationIdentity(
+        userId = "",
+        medium = "EMAIL",
+        destination = "d***@m***"
+    )
     UrgentTheme {
         Surface {
             ConfirmScreen(
                 confirmViewModel = confirmViewModel,
-                confirmMedium = "EMAIL",
-                confirmDestination = "d**1@gmail.com",
-                onConfirmRequest = {}
+                onBackToLogIn = {},
             )
         }
     }
