@@ -31,15 +31,8 @@ abstract class PatientMessage {
  *  "size": 2,
  *  "time": 201564813,
  *  "data": {
- *      "pulse": {
- *          "value": 72,
- *          "unit": "bpm"
- *      },
- *      "spo2": {
- *          "value": 60,
- *          "unit": "%"
- *          }
- *      }
+ *      "pulse": 72,
+ *      "spo2": 60
  *  }
  * ```
  */
@@ -48,7 +41,7 @@ class PatientDataMessage(
     val cid: String,
     val size: Int,
     val time: Long,
-    val data: HashMap<String, HashMap<String, Any>>
+    val data: HashMap<String, Int>
 ) : PatientMessage() {
     companion object {
         /**
