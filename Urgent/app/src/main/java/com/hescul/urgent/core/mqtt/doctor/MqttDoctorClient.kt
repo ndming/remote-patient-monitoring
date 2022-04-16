@@ -1,4 +1,4 @@
-package com.hescul.urgent.core.mqtt
+package com.hescul.urgent.core.mqtt.doctor
 
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
@@ -8,7 +8,8 @@ import com.amazonaws.regions.Region
 import com.amazonaws.services.iot.AWSIotClient
 import com.amazonaws.services.iot.model.AttachPolicyRequest
 import com.amazonaws.services.iot.model.ListAttachedPoliciesRequest
-import org.json.JSONObject
+import com.hescul.urgent.core.mqtt.MqttBrokerConfig
+import com.hescul.urgent.core.mqtt.MqttClientConfig
 import timber.log.Timber
 
 class MqttDoctorClient(clientId: String, endpoint: String) {
@@ -16,6 +17,7 @@ class MqttDoctorClient(clientId: String, endpoint: String) {
     init {
         mqttManager.maxAutoReconnectAttempts = MqttClientConfig.MAX_AUTO_RECONNECTION_ATTEMPTS
         mqttManager.setCleanSession(MqttClientConfig.CLEAN_SESSION)
+        mqttManager.setAutoResubscribe(MqttClientConfig.AUTO_RESUBSCRIBE)
     }
 
     companion object {
@@ -92,37 +94,53 @@ class MqttDoctorClient(clientId: String, endpoint: String) {
     fun disconnect(): Boolean = mqttManager.disconnect()
 
     /**
-     * Subscribe to the device with the id [deviceId]
+     * Subscribe to the device with the id [deviceId]. The function internally subscribes to
+     * both status and data channel. [onSubscriptionSuccess] will be called upon successful
+     * subscriptions. If any subscription channel fails, [onSubscriptionFailure] will be called
+     * with the error reason string. The [onMessageCallback] is registered for both channels and
+     * it will be called on any message arrival with the topic and the payload.
      */
     fun subscribe(
         deviceId: String,
         onSubscriptionSuccess: () -> Unit,
         onSubscriptionFailure: (String) -> Unit,
-        onDataMessageCallback: (String, JSONObject) -> Unit,
-        onStatusMessageCallback: (String, Int) -> Unit,
+        onMessageCallback: (String, ByteArray) -> Unit,
         defaultFailCause: String = DEFAULT_SUBSCRIPTION_FAIL_CAUSE,
     ) {
         val dataTopic = MqttClientConfig.DATA_TOPIC_PREFIX + deviceId
         val statusTopic = MqttClientConfig.STATUS_TOPIC_PREFIX + deviceId
-
-        val subscriptionCallback = object: AWSIotMqttSubscriptionStatusCallback {
+        val messageCallback = AWSIotMqttNewMessageCallback { topic, data ->
+            Timber.tag(DEBUG_TAG).d("message received: topic<$topic> | data:\n${String(data)}")
+            onMessageCallback(topic, data)
+        }
+        val dataSubscriptionCallback = object: AWSIotMqttSubscriptionStatusCallback {
             override fun onSuccess() {
-                Timber.tag(DEBUG_TAG).d("subscribed successfully!")
+                Timber.tag(DEBUG_TAG).d("subscribed successfully to data topic of $deviceId!")
                 onSubscriptionSuccess()
             }
 
             override fun onFailure(exception: Throwable?) {
-                Timber.tag(DEBUG_TAG).e("subscription failed: ${exception?.message}")
+                Timber.tag(DEBUG_TAG).e("data subscription failed: ${exception?.message}")
+                mqttManager.unsubscribeTopic(statusTopic)
                 val failCause = exception?.message ?: defaultFailCause
                 onSubscriptionFailure(failCause)
             }
         }
-        val messageCallback = AWSIotMqttNewMessageCallback { topic, data ->
-            val js = JSONObject(String(data))
-            Timber.tag(DEBUG_TAG).d("message received: topic<$topic> | data:\n${js.toString(2)}")
+        val statusSubscriptionCallback = object: AWSIotMqttSubscriptionStatusCallback {
+            override fun onSuccess() {
+                Timber.tag(DEBUG_TAG).d("subscribed successfully to status topic of $deviceId!")
+                mqttManager.subscribeToTopic(dataTopic,
+                    MqttClientConfig.SUBSCRIBE_QOS, dataSubscriptionCallback, messageCallback)
+            }
 
+            override fun onFailure(exception: Throwable?) {
+                Timber.tag(DEBUG_TAG).e("status subscription failed: ${exception?.message}")
+                val failCause = exception?.message ?: defaultFailCause
+                onSubscriptionFailure(failCause)
+            }
 
         }
-
+        mqttManager.subscribeToTopic(statusTopic,
+            MqttClientConfig.SUBSCRIBE_QOS, statusSubscriptionCallback, messageCallback)
     }
 }

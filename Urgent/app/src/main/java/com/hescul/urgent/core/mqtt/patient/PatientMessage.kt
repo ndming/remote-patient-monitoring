@@ -1,4 +1,4 @@
-package com.hescul.urgent.ui.screens.home
+package com.hescul.urgent.core.mqtt.patient
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
