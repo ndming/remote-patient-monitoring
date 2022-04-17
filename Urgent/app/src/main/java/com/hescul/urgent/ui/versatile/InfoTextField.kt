@@ -34,7 +34,8 @@ enum class InfoFieldType(@StringRes val label: Int, @StringRes val hint: Int) {
     EmailField(R.string.ui_signUpScreen_emailFieldLabel, R.string.ui_signUpScreen_emailFieldHint),
     PasswordField(R.string.ui_signUpScreen_passwordFieldLabel, R.string.ui_signUpScreen_passwordFieldHint),
     ConfirmPasswordField(R.string.ui_signUpScreen_confirmPasswordFieldLabel, R.string.ui_signUpScreen_confirmPasswordFieldHint),
-    ConfirmField(R.string.ui_confirmScreen_confirmFieldLabel, R.string.ui_confirmScreen_confirmFieldHint)
+    ConfirmField(R.string.ui_confirmScreen_confirmFieldLabel, R.string.ui_confirmScreen_confirmFieldHint),
+    DeviceIdField(R.string.ui_homeScreen_deviceIdFieldLabel, R.string.ui_homeScreen_deviceIdFieldHint)
 }
 
 
