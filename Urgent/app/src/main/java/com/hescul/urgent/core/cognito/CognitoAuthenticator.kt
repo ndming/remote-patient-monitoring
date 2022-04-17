@@ -288,24 +288,21 @@ class CognitoAuthenticator {
         @JvmStatic
         fun obtainIdentityId(
             credentialsProvider: CognitoCachingCredentialsProvider,
-            onDone: (Boolean, String) -> Unit, onFailure: (String) -> Unit
+            onDone: (String) -> Unit, onFailure: (String) -> Unit
         ) {
             val getIdRequest = GetIdRequest()
             getIdRequest.logins = credentialsProvider.logins
             getIdRequest.identityPoolId = CognitoConfig.IDENTITY_POOL_ID
-            var isFailed = false
             val identityId = try {
                 AmazonCognitoIdentityClient(credentialsProvider).getId(getIdRequest).identityId
             } catch (exception: AmazonServiceException) {
                 onFailure(exception.errorCode)
-                isFailed = true
                 ""
             } catch (exception: AmazonClientException) {
                 onFailure(exception.message ?: DEFAULT_GET_IDENTITY_FAIL_CAUSE)
-                isFailed = true
                 ""
             }
-            onDone(isFailed, identityId)
+            onDone(identityId)
         }
     } // !companion object
 }
