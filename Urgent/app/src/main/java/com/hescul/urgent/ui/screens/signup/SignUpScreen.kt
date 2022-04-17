@@ -39,10 +39,10 @@ fun SignUpScreen(
         UrgentTopBar(
             title = stringResource(id = R.string.ui_signUpScreen_title),
             onNavigateBack = onNavigateBack,
-            onLeftActionClick = {},
-            onRightActionClick = {},
             showNavigateBack = true,
-            enableNavigateBack = !signUpViewModel.isProgressing
+            enableNavigateBack = !signUpViewModel.isProgressing,
+            showRightAction = true,
+            onRightAction = { /*TODO*/ }
         )
         Column(
             modifier = Modifier
