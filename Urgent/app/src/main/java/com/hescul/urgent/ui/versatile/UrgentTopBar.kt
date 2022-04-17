@@ -20,12 +20,13 @@ import com.hescul.urgent.ui.theme.UrgentTheme
 @Composable
 fun UrgentTopBar(
     title: String,
-    onLeftActionClick: () -> Unit,
-    onRightActionClick: () -> Unit,
+    showNavigateBack: Boolean,
+    showRightAction: Boolean,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
-    showNavigateBack: Boolean = false,
     enableNavigateBack: Boolean = false,
+    onRightAction: () -> Unit = {},
+    enableRightAction: Boolean = false,
 ) {
     TopAppBar(
         modifier = modifier,
@@ -49,10 +50,6 @@ fun UrgentTopBar(
                         )
                     }
                 }
-                IconButton( // for arrangement purpose only
-                    onClick = {},
-                    enabled = false,
-                ) {}
             }
             Text(
                 text = title,
@@ -60,17 +57,16 @@ fun UrgentTopBar(
                 style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.SemiBold),
             )
             Row {
-                IconButton(onClick = onLeftActionClick) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreHoriz,
-                        contentDescription = stringResource(id = R.string.cd_moreHorizontalIcon)
-                    )
-                }
-                IconButton(onClick = onRightActionClick) {
-                    Icon(
-                        imageVector = Icons.Filled.RadioButtonChecked,
-                        contentDescription = stringResource(R.string.cd_radioButtonCheckedIcon)
-                    )
+                IconButton(
+                    onClick = onRightAction,
+                    enabled = showRightAction && enableRightAction
+                ) {
+                    if (showRightAction) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = stringResource(id = R.string.cd_moreVerticalIcon)
+                        )
+                    }
                 }
             }
         }
@@ -84,8 +80,11 @@ fun PreviewUrgentTopBar() {
         UrgentTopBar(
             title = "Home",
             onNavigateBack = {},
-            onLeftActionClick = {},
-            onRightActionClick = {},
+            showNavigateBack = true,
+            enableNavigateBack = true,
+            showRightAction = true,
+            enableRightAction = true,
+            onRightAction = {}
         )
     }
 }
