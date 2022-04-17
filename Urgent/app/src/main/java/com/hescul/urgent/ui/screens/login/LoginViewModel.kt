@@ -9,9 +9,8 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserCodeDel
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserSession
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.AuthenticationDetails
 import com.hescul.urgent.R
-import com.hescul.urgent.core.auth.cognito.CognitoAuthenticator
+import com.hescul.urgent.core.cognito.CognitoAuthenticator
 import com.hescul.urgent.core.utils.InfoValidator
-import com.hescul.urgent.ui.screens.signup.SignUpScreen
 
 class LoginViewModel : ViewModel() {
     companion object {
