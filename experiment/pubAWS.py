@@ -1,37 +1,41 @@
 from awscrt import io, mqtt, exceptions
-import json, time, random
+import json, time, random, re
+
+from credentials import Target
 
 ENDPOINT = "a2r0f2fq44oocy-ats.iot.us-east-1.amazonaws.com"    # endpoint
 HOSTPORT = 8883                                                # non web-socket
 
-CLIENT_ID = "RPMSOS0000"
+DEVICE_PATTERN = "RPMSOS([0-9]|[A-F]){4,4}"
+CLIENT_ID = str()
+try:
+    while (not re.match(DEVICE_PATTERN, CLIENT_ID)):
+        if (CLIENT_ID != ""):
+            print("Invalid device Id")
+        CLIENT_ID = str(input("Enter target device Id: "))
+except KeyboardInterrupt:
+    exit(1)
+
+
+TARGET = Target.getCredentials(CLIENT_ID)
+if (TARGET is None):
+    print("This device is not registered yet")
+    exit(1)
+CERTI_PATH = TARGET.certi_path
+KEY_PATH = TARGET.key_path
+
 DATA_TOPIC = f"rpm/sos/{CLIENT_ID}"
 STAT_TOPIC = f"rpm/tus/{CLIENT_ID}"
 PUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
-
-NUM_OF_REPETITIONS = 30
-PUBLISH_DELAY = 10  # in sec
 MAX_RECONNECTION_ATTEMPTS = 2
-
-CERTI_PATH_0000 = 'auth/RPMSOS0000/69a713daa8a9d05b477ea0172939360fff01619c064b7720f2ec5882503a79ee-certificate.pem.crt'
-KEY_PATH_0000 = 'auth/RPMSOS0000/69a713daa8a9d05b477ea0172939360fff01619c064b7720f2ec5882503a79ee-private.pem.key'
-
-CERTI_PATH_0001 = 'auth/RPMSOS0001/335e60492169df4893484de4644741ddd52dbe1abdc4cc54e1c1e060933605d7-certificate.pem.crt'
-KEY_PATH_0001 = 'auth/RPMSOS0001/335e60492169df4893484de4644741ddd52dbe1abdc4cc54e1c1e060933605d7-private.pem.key'
 
 DATA_MESSAGE = {
     "cid": CLIENT_ID,
     "size": 3,
     "time": None,
     "data": {
-        "pulse": {
-            "value": None,
-            "unit": "bpm",
-        },
-        "spo2": {
-            "value": None,
-            "unit": "%",
-        }
+        "pulse": None,
+        "spo2": None
     },
 }
 
@@ -75,11 +79,9 @@ def onConnectionResumed(connection: mqtt.Connection, return_code: mqtt.ConnectRe
 
 def getDataMessage() -> dict:
     mess = DATA_MESSAGE
-    mess['data']['pulse']['value'] = round(random.uniform(65.5, 75.5), 1)
-    mess['data']['oxi']['value'] = round(random.uniform(85.5, 95.5), 1)
-    mess['time'] = time.time()
-    # print("your message:")
-    # print(json.dumps(mess, indent=2))
+    mess['data']['pulse'] = random.randint(60, 80)
+    mess['data']['spo2'] = random.randint(80, 100)
+    mess['time'] = round(time.time())
     return mess
 
 def getStatMessage(code: int) -> dict:
@@ -119,8 +121,8 @@ eventLoopGroup = io.EventLoopGroup()
 hostResolver = io.DefaultHostResolver(eventLoopGroup)
 clientBootstrap = io.ClientBootstrap(eventLoopGroup, hostResolver)
 tlsContextOptions = io.TlsContextOptions.create_client_with_mtls_from_path(
-    cert_filepath=CERTI_PATH_0000,
-    pk_filepath=KEY_PATH_0000
+    cert_filepath=CERTI_PATH,
+    pk_filepath=KEY_PATH
 )
 clientTlsContext = io.ClientTlsContext(tlsContextOptions)
 myAWSIoTClient = mqtt.Client(bootstrap=clientBootstrap, tls_ctx=clientTlsContext)
@@ -141,19 +143,26 @@ clientConnection = mqtt.Connection(
     will=clientWill
 )
 
+numOfMessageToPublish = int(input("No. of messages: "))
+if numOfMessageToPublish < 0: numOfMessageToPublish = 1
+publishDelay = int(input("Delay in-between(s): "))
+if publishDelay < 5: publishDelay = 5
+
 try:
     # connect to AWS IoT core and set status to 0 (online)
     connectClient(clientConnection)
 
-    for i in range(NUM_OF_REPETITIONS):
+    for i in range(numOfMessageToPublish):
         # publish a random-value message
         publishMessage(clientConnection, DATA_TOPIC, getDataMessage())
 
         # delay
-        time.sleep(PUBLISH_DELAY)
+        time.sleep(publishDelay)
     
     # disconnect on completed publish and set status to 1 (offline)
     disconnectClient(clientConnection)
 
 except exceptions.AwsCrtError as e:
     print(f"[E] {e.name}: {e.message}")
+except KeyboardInterrupt:
+    disconnectClient(clientConnection)
