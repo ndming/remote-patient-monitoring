@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.hescul.urgent.R
-import com.hescul.urgent.core.auth.cognito.CognitoAuthenticator
+import com.hescul.urgent.core.cognito.CognitoAuthenticator
 import com.hescul.urgent.core.utils.InfoValidator
 
 class ConfirmViewModel : ViewModel() {
@@ -18,8 +18,7 @@ class ConfirmViewModel : ViewModel() {
     }
 
     // late init data
-    var userId = SAMPLE_USER_ID
-        private set
+    private var userId = SAMPLE_USER_ID
     var medium = SAMPLE_MEDIUM
         private set
     var destination = SAMPLE_DESTINATION
