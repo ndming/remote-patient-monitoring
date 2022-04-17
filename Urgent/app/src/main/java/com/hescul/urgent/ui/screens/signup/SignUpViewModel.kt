@@ -9,7 +9,7 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserAttributes
 import com.amazonaws.services.cognitoidentityprovider.model.SignUpResult
 import com.hescul.urgent.R
-import com.hescul.urgent.core.auth.cognito.CognitoAuthenticator
+import com.hescul.urgent.core.cognito.CognitoAuthenticator
 import com.hescul.urgent.core.utils.InfoValidator
 
 
