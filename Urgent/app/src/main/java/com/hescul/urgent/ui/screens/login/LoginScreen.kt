@@ -25,6 +25,7 @@ import com.hescul.urgent.ui.screens.signup.EmailField
 import com.hescul.urgent.ui.screens.signup.PasswordField
 import com.hescul.urgent.ui.theme.UrgentTheme
 import com.hescul.urgent.ui.versatile.LoadingButton
+import com.hescul.urgent.ui.versatile.UrgentTopBar
 import com.hescul.urgent.ui.versatile.config.LoadingButtonConfig
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -39,100 +40,108 @@ fun LoginScreen(
     val localContext = LocalContext.current
     val innerPadding = 5.dp
     val contentPadding = 40.dp
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        LoginHeader(innerPadding = innerPadding)
-        Spacer(modifier = Modifier.padding(vertical = contentPadding))
-        EmailField(
-            text = loginViewModel.emailTextInput,
-            onTextChange = loginViewModel::onEmailTextInputChange,
-            isError = loginViewModel.isEmailError(),
-            enableEdit = !loginViewModel.isProgressing
+    Column(modifier = modifier) {
+        UrgentTopBar(
+            title = stringResource(id = R.string.ui_loginScreen_title),
+            showNavigateBack = false,
+            showRightAction = true,
+            onRightAction = { /*TODO*/ }
         )
-        Spacer(modifier = Modifier.padding(vertical = innerPadding))
-        PasswordField(
-            text = loginViewModel.passwordTextInput,
-            onTextChange = loginViewModel::onPasswordTextInputChange,
-            enableEdit = !loginViewModel.isProgressing
-        )
-        AnimatedVisibility(visible = loginViewModel.failCause.isNotEmpty()) {
-            Row(
-                modifier = Modifier.padding(innerPadding * 2),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = loginViewModel.failCause,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colors.error,
-                )
-            }
-        }
-        AnimatedVisibility(visible = loginViewModel.failCause.isEmpty()) {
-            Spacer(modifier = Modifier.padding(vertical = innerPadding * 2))
-        }
-        LoadingButton(
-            text = stringResource(id = R.string.ui_loginScreen_loginButton),
-            onClick = {
-                loginViewModel.onLogInRequest(localContext, onLoginDone)
-            },
-            enabled = loginViewModel.isButtonEnabled(),
-            isLoading = loginViewModel.isProgressing,
-            textFontSize = LoadingButtonConfig.TEXT_FONT_SIZE.sp,
-            buttonWidth = LoadingButtonConfig.DEFAULT_WIDTH.dp,
-            buttonHeight = LoadingButtonConfig.DEFAULT_HEIGHT.dp,
-            loadingWidth = LoadingButtonConfig.PROGRESS_WIDTH.dp,
-            transitionDuration = LoadingButtonConfig.STATE_TRANSITION_DURATION,
-            textEnterTransition = fadeIn(
-                animationSpec = TweenSpec(delay = LoadingButtonConfig.TEXT_FADE_IN_DELAY)
-            ),
-        )
-        Spacer(modifier = Modifier.padding(vertical = contentPadding))
-        AnimatedContent(
-            targetState = loginViewModel.isNotConfirmed,
-            contentAlignment = Alignment.Center,
-            transitionSpec = {
-                ContentTransform(
-                    targetContentEnter = slideIntoContainer(
-                        towards = AnimatedContentScope.SlideDirection.Down,
-                        animationSpec = tween(800)
-                    ),
-                    initialContentExit = fadeOut(
-                        animationSpec = tween(400)
-                    )
-                )
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            AnimatedVisibility(
-                visible = loginViewModel.isNotConfirmed,
-                enter = fadeIn(animationSpec = tween(1500)),
-                exit = fadeOut(animationSpec = tween(0)),
-            ) {
-                LoginFooter(
-                    message = stringResource(id = R.string.ui_loginScreen_missingConfirmationCodeMessage),
-                    actionText = stringResource(id = R.string.ui_loginScreen_confirmButton),
-                    onAction = {
-                        loginViewModel.onResendSignUpConfirmationRequest(localContext, onResendSignUpConfirmationDone)
-                    },
-                    actionEnable = !loginViewModel.isProgressing
-                )
+            LoginHeader(innerPadding = innerPadding)
+            Spacer(modifier = Modifier.padding(vertical = contentPadding))
+            EmailField(
+                text = loginViewModel.emailTextInput,
+                onTextChange = loginViewModel::onEmailTextInputChange,
+                isError = loginViewModel.isEmailError(),
+                enableEdit = !loginViewModel.isProgressing
+            )
+            Spacer(modifier = Modifier.padding(vertical = innerPadding))
+            PasswordField(
+                text = loginViewModel.passwordTextInput,
+                onTextChange = loginViewModel::onPasswordTextInputChange,
+                enableEdit = !loginViewModel.isProgressing
+            )
+            AnimatedVisibility(visible = loginViewModel.failCause.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.padding(innerPadding * 2),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = loginViewModel.failCause,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colors.error,
+                    )
+                }
             }
-            AnimatedVisibility(
-                visible = !loginViewModel.isNotConfirmed,
-                enter = fadeIn(animationSpec = tween(1500)),
-                exit = fadeOut(animationSpec = tween(0)),
+            AnimatedVisibility(visible = loginViewModel.failCause.isEmpty()) {
+                Spacer(modifier = Modifier.padding(vertical = innerPadding * 2))
+            }
+            LoadingButton(
+                text = stringResource(id = R.string.ui_loginScreen_loginButton),
+                onClick = {
+                    loginViewModel.onLogInRequest(localContext, onLoginDone)
+                },
+                enabled = loginViewModel.isButtonEnabled(),
+                isLoading = loginViewModel.isProgressing,
+                textFontSize = LoadingButtonConfig.TEXT_FONT_SIZE.sp,
+                buttonWidth = LoadingButtonConfig.DEFAULT_WIDTH.dp,
+                buttonHeight = LoadingButtonConfig.DEFAULT_HEIGHT.dp,
+                loadingWidth = LoadingButtonConfig.PROGRESS_WIDTH.dp,
+                transitionDuration = LoadingButtonConfig.STATE_TRANSITION_DURATION,
+                textEnterTransition = fadeIn(
+                    animationSpec = TweenSpec(delay = LoadingButtonConfig.TEXT_FADE_IN_DELAY)
+                ),
+            )
+            Spacer(modifier = Modifier.padding(vertical = contentPadding))
+            AnimatedContent(
+                targetState = loginViewModel.isNotConfirmed,
+                contentAlignment = Alignment.Center,
+                transitionSpec = {
+                    ContentTransform(
+                        targetContentEnter = slideIntoContainer(
+                            towards = AnimatedContentScope.SlideDirection.Down,
+                            animationSpec = tween(800)
+                        ),
+                        initialContentExit = fadeOut(
+                            animationSpec = tween(400)
+                        )
+                    )
+                }
             ) {
-                LoginFooter(
-                    message = stringResource(id = R.string.ui_loginScreen_footer),
-                    actionText = stringResource(id = R.string.ui_loginScreen_signUpButton),
-                    onAction = onNavigateToSignUp,
-                    actionEnable = !loginViewModel.isProgressing
-                )
+                AnimatedVisibility(
+                    visible = loginViewModel.isNotConfirmed,
+                    enter = fadeIn(animationSpec = tween(1500)),
+                    exit = fadeOut(animationSpec = tween(0)),
+                ) {
+                    LoginFooter(
+                        message = stringResource(id = R.string.ui_loginScreen_missingConfirmationCodeMessage),
+                        actionText = stringResource(id = R.string.ui_loginScreen_confirmButton),
+                        onAction = {
+                            loginViewModel.onResendSignUpConfirmationRequest(localContext, onResendSignUpConfirmationDone)
+                        },
+                        actionEnable = !loginViewModel.isProgressing
+                    )
+                }
+                AnimatedVisibility(
+                    visible = !loginViewModel.isNotConfirmed,
+                    enter = fadeIn(animationSpec = tween(1500)),
+                    exit = fadeOut(animationSpec = tween(0)),
+                ) {
+                    LoginFooter(
+                        message = stringResource(id = R.string.ui_loginScreen_footer),
+                        actionText = stringResource(id = R.string.ui_loginScreen_signUpButton),
+                        onAction = onNavigateToSignUp,
+                        actionEnable = !loginViewModel.isProgressing
+                    )
+                }
             }
         }
     }
