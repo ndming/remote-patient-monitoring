@@ -1,6 +1,8 @@
-package com.hescul.urgent.core.auth.cognito
+package com.hescul.urgent.core.cognito
 
 import android.content.Context
+import com.amazonaws.AmazonClientException
+import com.amazonaws.AmazonServiceException
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.*
@@ -12,24 +14,21 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GenericHa
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.SignUpHandler
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.VerificationHandler
 import com.amazonaws.regions.Regions
+import com.amazonaws.services.cognitoidentity.AmazonCognitoIdentityClient
+import com.amazonaws.services.cognitoidentity.model.GetIdRequest
 import com.amazonaws.services.cognitoidentityprovider.model.SignUpResult
+import com.amazonaws.util.VersionInfoUtils
 import timber.log.Timber
 import java.lang.Exception
 
-class CognitoAuthenticator(
-    context: Context,
-    region: Regions,
-    identityPoolId: String,
-) {
-    private val credentialsProvider =
-        CognitoCachingCredentialsProvider(context, identityPoolId, region)
-
+class CognitoAuthenticator {
     companion object {
         private const val DEBUG_TAG = "authCognito"
         private const val DEFAULT_SIGNUP_FAIL_CAUSE = "Sign-up failed"
         private const val DEFAULT_CONFIRM_SIGNUP_FAIL_CAUSE = "Confirmation failed"
         private const val DEFAULT_SIGN_IN_FAIL_CAUSE = "Sign-in failed"
         private const val DEFAULT_RESEND_CONFIRMATION_FAIL_CAUSE = "Resend failed"
+        private const val DEFAULT_GET_IDENTITY_FAIL_CAUSE = "Failed to obtain identity id"
         private const val FAIL_CAUSE_DELIMITER = '.'
         private val FAIL_CAUSE_REPLACE_CHARS = listOf(':', '(')
 
@@ -43,11 +42,11 @@ class CognitoAuthenticator(
         @JvmStatic
         private fun createUserPool(context: Context) = CognitoUserPool(
             context,
-            CognitoConfig.POOL_ID,
+            CognitoConfig.USER_POOL_ID,
             CognitoConfig.CLIENT_ID,
             CognitoConfig.CLIENT_SECRET,
             ClientConfiguration(),
-            CognitoConfig.REGION
+            CognitoConfig.USER_POOL_REGION
         )
 
         /**
@@ -60,10 +59,11 @@ class CognitoAuthenticator(
          */
         @JvmStatic
         fun reduceFailCause(cause: String): String {
+            var reducedCause = cause
             for (chr in FAIL_CAUSE_REPLACE_CHARS) {
-                cause.replace(chr, FAIL_CAUSE_DELIMITER)
+                reducedCause = reducedCause.replace(chr, FAIL_CAUSE_DELIMITER)
             }
-            return cause.substringBefore(FAIL_CAUSE_DELIMITER).trimEnd()
+            return reducedCause.substringBefore(FAIL_CAUSE_DELIMITER).trimEnd()
         }
 
         /**
@@ -262,6 +262,7 @@ class CognitoAuthenticator(
             // set up callbacks
             val verificationHandler = object : VerificationHandler {
                 override fun onSuccess(verificationCodeDeliveryMedium: CognitoUserCodeDeliveryDetails?) {
+                    Timber.tag(DEBUG_TAG).d("resend sign-up confirmation code succeeded")
                     if (verificationCodeDeliveryMedium == null) {
                         onResendConfirmationFailure(DEFAULT_RESEND_CONFIRMATION_FAIL_CAUSE)
                     } else {
@@ -270,6 +271,7 @@ class CognitoAuthenticator(
                 }
 
                 override fun onFailure(exception: Exception?) {
+                    Timber.tag(DEBUG_TAG).e("failed to resend sign-up confirmation code: ${exception?.message}")
                     val failCause = exception?.message ?: defaultFailCause
                     onResendConfirmationFailure(failCause)
                 }
@@ -278,16 +280,32 @@ class CognitoAuthenticator(
             // request resend sign up confirmation in background
             cognitoUser.resendConfirmationCodeInBackground(verificationHandler)
         }
-    } // !companion object
 
-    @Deprecated(message = "Migrated to singleton API")
-    fun obtainCredentialsProvider(
-        providerName: String,
-        userSession: CognitoUserSession,
-    ): CognitoCachingCredentialsProvider {
-        val logins = HashMap<String, String>()
-        logins[providerName] = userSession.idToken.jwtToken
-        credentialsProvider.logins = logins
-        return credentialsProvider
-    }
+        /**
+         * Request the identity id of the user associated to this Credentials Provider.
+         * Must NOT be called in the UI thread.
+         */
+        @JvmStatic
+        fun obtainIdentityId(
+            credentialsProvider: CognitoCachingCredentialsProvider,
+            onDone: (Boolean, String) -> Unit, onFailure: (String) -> Unit
+        ) {
+            val getIdRequest = GetIdRequest()
+            getIdRequest.logins = credentialsProvider.logins
+            getIdRequest.identityPoolId = CognitoConfig.IDENTITY_POOL_ID
+            var isFailed = false
+            val identityId = try {
+                AmazonCognitoIdentityClient(credentialsProvider).getId(getIdRequest).identityId
+            } catch (exception: AmazonServiceException) {
+                onFailure(exception.errorCode)
+                isFailed = true
+                ""
+            } catch (exception: AmazonClientException) {
+                onFailure(exception.message ?: DEFAULT_GET_IDENTITY_FAIL_CAUSE)
+                isFailed = true
+                ""
+            }
+            onDone(isFailed, identityId)
+        }
+    } // !companion object
 }
