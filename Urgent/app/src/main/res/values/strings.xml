@@ -8,7 +8,7 @@
     <string name="cd_arrowBackIosIcon">Arrow Back Ios Icon</string>
     <string name="cd_navigateBeforeIcon">Navigate To Previous Screen</string>
     <string name="cd_radioButtonCheckedIcon">Radio Button Check Icon</string>
-    <string name="cd_moreHorizontalIcon">More Content</string>
+    <string name="cd_moreVerticalIcon">More Content</string>
     <string name="cd_addIcon">Add</string>
     <string name="cd_circleSeparateIcon">Circle</string>
     <string name="cd_favoriteIcon">Heart</string>
@@ -17,6 +17,13 @@
     <string name="cd_circleOnlineIcon">Status Online</string>
     <string name="cd_circleOfflineIcon">Status Offline</string>
     <string name="cd_circleErrorIcon">Status Error</string>
+    <string name="cd_scheduleIcon">Updated at</string>
+    <string name="cd_filledPushPinIcon">Pinned</string>
+    <string name="cd_outlinedPushPinIcon">Unpinned</string>
+    <string name="cd_removeCircleIcon">Remove this attribute</string>
+    <string name="cd_addCircleIcon">Add an attribute</string>
+    <string name="cd_homeIcon">Home Icon</string>
+    <string name="cd_personIcon">Person Icon</string>
 
     <string name="ui_signUpScreen_title">Sign Up</string>
     <string name="ui_signUpScreen_defaultFailCause">Sign up failed. Please try again.</string>
@@ -41,6 +48,7 @@
     <string name="ui_confirmScreen_defaultConfirmMethod">sign-up method</string>
     <string name="ui_confirmScreen_confirmSuccessMessage">Confirmed successfully!</string>
 
+    <string name="ui_loginScreen_title">Login</string>
     <string name="ui_loginScreen_header">Welcome Back</string>
     <string name="ui_loginScreen_subHeader">Sign in with your email and password</string>
     <string name="ui_loginScreen_footer">Don\'t have an account?</string>
@@ -51,15 +59,35 @@
     <string name="ui_loginScreen_missingConfirmationCodeMessage">Missed the confirmation code?</string>
     <string name="ui_loginScreen_resendSignUpConfirmationDefaultFailCause">Failed to resend sign-up confirmation code</string>
 
-    <string name="ui_homeScreen_title">Home</string>
+    <string name="ui_homeScreen_patientScreenTitle">Home</string>
+    <string name="ui_homeScreen_doctorScreenTitle">User</string>
     <string name="ui_homeScreen_fabExtended">PATIENT</string>
     <string name="ui_homeScreen_maleGender">Male</string>
     <string name="ui_homeScreen_femaleGender">Female</string>
     <string name="ui_homeScreen_ageTrailing">years-old</string>
     <string name="ui_homeScreen_contentTitle">Patient profiles</string>
+    <string name="ui_homeScreen_launchMessage">Launching…</string>
+    <string name="ui_homeScreen_nullSessionMessage">Fatal error: null session failure</string>
+    <string name="ui_homeScreen_emptyPatientGuide">Tap \'+\' to add your patient</string>
+    <string name="ui_homeScreen_subscriptionFailDefaultFailCause">Subscription failed</string>
+    <string name="ui_homeScreen_subscribeSheetTitle">Add a patient</string>
+    <string name="ui_homeScreen_subscribeButton">Subscribe</string>
+    <string name="ui_homeScreen_deviceIdFieldLabel">Device ID</string>
+    <string name="ui_homeScreen_deviceIdFieldHint">eg. RPMSOS0000</string>
+    <string name="ui_homeScreen_attributeFieldTitle">Optional attributes</string>
+    <string name="ui_homeScreen_deviceIdAlreadyExistedMessage">Device ID already existed</string>
+    <string name="ui_homeScreen_nameFieldLabel">Patient Name</string>
+    <string name="ui_homeScreen_keyFieldLabel">key</string>
+    <string name="ui_homeScreen_keyFieldHint">eg. Gender</string>
+    <string name="ui_homeScreen_valueFieldLabel">value</string>
+    <string name="ui_homeScreen_valueFieldHint">eg. Male</string>
+    <string name="ui_homeScreen_exceedingPinnedAttributeMessage">Maximum 3 pinned attributes allowed</string>
+    <string name="ui_homeScreen_exceedingAttributeMessage">Maximum 8 attributes allowed</string>
+    <string name="ui_homeScreen_profileScreenLabel">Patients</string>
+    <string name="ui_homeScreen_doctorScreenLabel">Personal</string>
 
-    <string name="ui_profileScreen_pulseIndexName">Heart Rate</string>
+    <string name="ui_profileScreen_pulseIndexName">Pulse</string>
     <string name="ui_profileScreen_pulseIndexUnit">bpm</string>
-    <string name="ui_profileScreen_spo2IndexName">SpO2</string>
+    <string name="ui_profileScreen_spo2IndexName">SPo2</string>
     <string name="ui_profileScreen_spo2IndexUnit">%</string>
 </resources>
