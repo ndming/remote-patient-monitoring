@@ -27,7 +27,7 @@ fun UrgentNavHost(
     modifier: Modifier = Modifier
 ) {
     UrgentTheme {
-        //val allScreens = UrgentScreen.values().toList()
+        //val allScreens = UrgentScreens.values().toList()
         val navController = rememberAnimatedNavController()
         SystemTheme()
         Surface(
@@ -40,7 +40,7 @@ fun UrgentNavHost(
             ) {
                 // Opening Screen
                 composable(
-                    route = UrgentScreen.Opening.name,
+                    route = UrgentScreens.Opening.name,
                     enterTransition = { fadeIn(animationSpec = tween(400)) },
                     exitTransition = { fadeOut(animationSpec = tween(200)) }
                 ) {
@@ -48,8 +48,8 @@ fun UrgentNavHost(
                     OpeningScreen(
                         openingViewModel = openingViewModel,
                         onDone = {
-                            navController.navigate(UrgentScreen.Login.name) {
-                                popUpTo(UrgentScreen.Opening.name) { inclusive = true }
+                            navController.navigate(UrgentScreens.Login.name) {
+                                popUpTo(UrgentScreens.Opening.name) { inclusive = true }
                             }
                         }
                     )
@@ -57,10 +57,10 @@ fun UrgentNavHost(
 
                 // Sign Up Screen
                 composable(
-                    route = UrgentScreen.SignUp.name,
+                    route = UrgentScreens.SignUp.name,
                     enterTransition = {
                         when (initialState.destination.route) {
-                            UrgentScreen.Login.name -> slideIntoContainer(
+                            UrgentScreens.Login.name -> slideIntoContainer(
                                 towards = AnimatedContentScope.SlideDirection.Left,
                                 animationSpec = tween(durationMillis = NavConfig.ENTER_TRANSITION_DURATION)
                             )
@@ -69,7 +69,7 @@ fun UrgentNavHost(
                     },
                     exitTransition = {
                         when (targetState.destination.route) {
-                            UrgentScreen.Login.name -> slideOutOfContainer(
+                            UrgentScreens.Login.name -> slideOutOfContainer(
                                 AnimatedContentScope.SlideDirection.Right,
                                 animationSpec = tween(durationMillis = NavConfig.EXIT_TRANSITION_DURATION)
                             )
@@ -87,7 +87,7 @@ fun UrgentNavHost(
                                 destination = signUpResult.codeDeliveryDetails.destination
                             )
                             viewModels.confirmViewModel.reset()
-                            navController.navigate(UrgentScreen.Confirm.name)
+                            navController.navigate(UrgentScreens.Confirm.name)
                         },
                         onNavigateBack = {
                             viewModels.loginViewModel.reset()
@@ -98,7 +98,7 @@ fun UrgentNavHost(
 
                 // Confirm Screen
                 composable(
-                    route = UrgentScreen.Confirm.name,
+                    route = UrgentScreens.Confirm.name,
                     enterTransition = {
                         slideIntoContainer(
                             towards = AnimatedContentScope.SlideDirection.Up,
@@ -117,8 +117,8 @@ fun UrgentNavHost(
                         confirmViewModel = confirmViewModel,
                         onBackToLogIn = {
                             viewModels.loginViewModel.reset()
-                            navController.navigate(UrgentScreen.Login.name) {
-                                popUpTo(UrgentScreen.Login.name) { inclusive = true }
+                            navController.navigate(UrgentScreens.Login.name) {
+                                popUpTo(UrgentScreens.Login.name) { inclusive = true }
                             }
                         }
                     )
@@ -126,7 +126,7 @@ fun UrgentNavHost(
 
                 // Login Screen
                 composable(
-                    route = UrgentScreen.Login.name,
+                    route = UrgentScreens.Login.name,
                     enterTransition = {
                         fadeIn(animationSpec = tween(durationMillis = NavConfig.ENTER_TRANSITION_DURATION))
                     },
@@ -137,14 +137,15 @@ fun UrgentNavHost(
                     val loginViewModel = viewModels.loginViewModel
                     LoginScreen(
                         loginViewModel = loginViewModel,
-                        onLoginDone = { userSession -> // TODO
-                            navController.navigate(UrgentScreen.Home.name) {
-                                popUpTo(UrgentScreen.Login.name) { inclusive = true }
+                        onLoginDone = { userSession ->
+                            viewModels.patientViewModel.updateCredentialsProvider(userSession)
+                            navController.navigate(UrgentScreens.Home.name) {
+                                popUpTo(UrgentScreens.Login.name) { inclusive = true }
                             }
                         },
                         onNavigateToSignUp = {
                             viewModels.signUpViewModel.reset()
-                            navController.navigate(UrgentScreen.SignUp.name)
+                            navController.navigate(UrgentScreens.SignUp.name)
                         },
                         onResendSignUpConfirmationDone = { userId, codeDeliveryDetails ->
                             viewModels.confirmViewModel.reset()
@@ -153,19 +154,19 @@ fun UrgentNavHost(
                                 medium = codeDeliveryDetails.deliveryMedium,
                                 destination = codeDeliveryDetails.destination
                             )
-                            navController.navigate(UrgentScreen.Confirm.name)
+                            navController.navigate(UrgentScreens.Confirm.name)
                         }
                     )
                 }
 
                 // Home Screen
                 composable(
-                    route = UrgentScreen.Home.name,
+                    route = UrgentScreens.Home.name,
                     enterTransition = { EnterTransition.None }
                 ) {
-                    val homeViewModel = viewModels.homeViewModel
                     HomeScreen(
-                        homeViewModel = homeViewModel,
+                        homeViewModel = viewModels.homeViewModel,
+                        patientViewModel = viewModels.patientViewModel,
                     )
                 }
             }
