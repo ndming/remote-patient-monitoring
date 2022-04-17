@@ -1,13 +1,16 @@
 package com.hescul.urgent
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import com.hescul.urgent.navigation.UrgentNavHost
-import com.hescul.urgent.navigation.UrgentScreen
+import com.hescul.urgent.navigation.UrgentScreens
 import com.hescul.urgent.ui.screens.confirm.ConfirmViewModel
 import com.hescul.urgent.ui.screens.home.HomeViewModel
+import com.hescul.urgent.ui.screens.home.patient.PatientViewModel
+import com.hescul.urgent.ui.screens.home.patient.PatientViewModelFactory
 import com.hescul.urgent.ui.screens.login.LoginViewModel
 import com.hescul.urgent.ui.screens.opening.OpeningViewModel
 import com.hescul.urgent.ui.screens.signup.SignUpViewModel
@@ -15,28 +18,30 @@ import com.hescul.urgent.ui.screens.signup.SignUpViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val viewModels = initViewModels()
+        val viewModels = initViewModels(applicationContext)
         setContent {
             UrgentNavHost(
-                startDestination = UrgentScreen.Opening.name,
+                startDestination = UrgentScreens.Opening.name,
                 viewModels = viewModels,
             )
         }
 
     }
 
-    private fun initViewModels(): UrgentViewModels {
+    private fun initViewModels(context: Context): UrgentViewModels {
         val openingViewModel by viewModels<OpeningViewModel>()
         val signUpViewModel by viewModels<SignUpViewModel>()
         val confirmViewModel by viewModels<ConfirmViewModel>()
         val loginViewModel by viewModels<LoginViewModel>()
         val homeViewModel by viewModels<HomeViewModel>()
+        val patientViewModel by viewModels<PatientViewModel>(factoryProducer = { PatientViewModelFactory(context) })
         return UrgentViewModels(
             openingViewModel = openingViewModel,
             loginViewModel = loginViewModel,
             signUpViewModel = signUpViewModel,
             confirmViewModel = confirmViewModel,
-            homeViewModel = homeViewModel
+            homeViewModel = homeViewModel,
+            patientViewModel = patientViewModel
         )
     }
 }
