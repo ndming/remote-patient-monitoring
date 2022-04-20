@@ -41,8 +41,8 @@ fun SignUpScreen(
             onNavigateBack = onNavigateBack,
             showNavigateBack = true,
             enableNavigateBack = !signUpViewModel.isProgressing,
-            showRightAction = true,
-            onRightAction = { /*TODO*/ }
+            showMoreContentButton = true,
+            enableMoreContent = true
         )
         Column(
             modifier = Modifier
