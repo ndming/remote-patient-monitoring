@@ -15,6 +15,7 @@ import com.hescul.urgent.ui.screens.confirm.ConfirmScreen
 import com.hescul.urgent.ui.screens.home.HomeScreen
 import com.hescul.urgent.ui.screens.login.LoginScreen
 import com.hescul.urgent.ui.screens.opening.OpeningScreen
+import com.hescul.urgent.ui.screens.profile.ProfileScreen
 import com.hescul.urgent.ui.screens.signup.SignUpScreen
 import com.hescul.urgent.ui.theme.SystemTheme
 import com.hescul.urgent.ui.theme.UrgentTheme
@@ -162,11 +163,46 @@ fun UrgentNavHost(
                 // Home Screen
                 composable(
                     route = UrgentScreens.Home.name,
-                    enterTransition = { EnterTransition.None }
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(durationMillis = NavConfig.ENTER_TRANSITION_DURATION))
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(durationMillis = NavConfig.EXIT_TRANSITION_DURATION))
+                    }
                 ) {
                     HomeScreen(
                         homeViewModel = viewModels.homeViewModel,
                         patientViewModel = viewModels.patientViewModel,
+                        doctorViewModel = viewModels.doctorViewModel,
+                        onPatientSelect = { patient ->
+                            viewModels.profileViewModel.updatePatient(patient)
+                            navController.navigate(UrgentScreens.Profile.name)
+                        }
+                    )
+                }
+
+                // Profile Screen
+                composable(
+                    route = UrgentScreens.Profile.name,
+                    enterTransition = {
+                        slideIntoContainer(
+                            towards = AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(durationMillis = NavConfig.ENTER_TRANSITION_DURATION)
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutOfContainer(
+                            towards = AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(durationMillis = NavConfig.EXIT_TRANSITION_DURATION)
+                        )
+                    }
+                ) {
+                    ProfileScreen(
+                        profileViewModel = viewModels.profileViewModel,
+                        patientViewModel = viewModels.patientViewModel,
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        }
                     )
                 }
             }
