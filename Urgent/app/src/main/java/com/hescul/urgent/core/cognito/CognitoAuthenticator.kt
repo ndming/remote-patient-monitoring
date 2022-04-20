@@ -9,15 +9,10 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.*
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.AuthenticationContinuation
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.ChallengeContinuation
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.MultiFactorAuthenticationContinuation
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.AuthenticationHandler
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GenericHandler
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.SignUpHandler
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.VerificationHandler
-import com.amazonaws.regions.Regions
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.*
 import com.amazonaws.services.cognitoidentity.AmazonCognitoIdentityClient
 import com.amazonaws.services.cognitoidentity.model.GetIdRequest
 import com.amazonaws.services.cognitoidentityprovider.model.SignUpResult
-import com.amazonaws.util.VersionInfoUtils
 import timber.log.Timber
 import java.lang.Exception
 
@@ -29,6 +24,7 @@ class CognitoAuthenticator {
         private const val DEFAULT_SIGN_IN_FAIL_CAUSE = "Sign-in failed"
         private const val DEFAULT_RESEND_CONFIRMATION_FAIL_CAUSE = "Resend failed"
         private const val DEFAULT_GET_IDENTITY_FAIL_CAUSE = "Failed to obtain identity id"
+        private const val DEFAULT_GET_ATTRIBUTES_FAIL_CAUSE = "Failed to fetch user attributes"
         private const val FAIL_CAUSE_DELIMITER = '.'
         private val FAIL_CAUSE_REPLACE_CHARS = listOf(':', '(')
 
@@ -279,6 +275,46 @@ class CognitoAuthenticator {
 
             // request resend sign up confirmation in background
             cognitoUser.resendConfirmationCodeInBackground(verificationHandler)
+        }
+
+        @JvmStatic
+        fun requestUserAttributes(
+            context: Context,
+            userId: String,
+            onGetAttributesSuccess: (CognitoUserDetails) -> Unit,
+            onGetAttributesFailure: (String) -> Unit,
+            defaultFailCause: String = DEFAULT_GET_ATTRIBUTES_FAIL_CAUSE
+        ) {
+            // obtain the cognito user
+            val cognitoUser = createUserPool(context).getUser(userId)
+
+            // set up callback
+            val getDetailsHandler = object: GetDetailsHandler {
+                override fun onSuccess(cognitoUserDetails: CognitoUserDetails?) {
+                    if (cognitoUserDetails == null) {
+                        onGetAttributesFailure(defaultFailCause)
+                    }
+                    else {
+                        Timber.tag(DEBUG_TAG).d("get user attributes succeeded: ${cognitoUserDetails.attributes}")
+                        onGetAttributesSuccess(cognitoUserDetails)
+                    }
+                }
+
+                override fun onFailure(exception: Exception?) {
+                    Timber.tag(DEBUG_TAG).e("failed to get user attributes: ${exception?.message}")
+                    val failCause = exception?.message ?: defaultFailCause
+                    onGetAttributesFailure(failCause)
+                }
+
+            }
+
+            // request user attribute
+            cognitoUser.getDetailsInBackground(getDetailsHandler)
+        }
+
+        @JvmStatic
+        fun getCurrentUserId(context: Context): String? {
+            return createUserPool(context).currentUser.userId
         }
 
         /**
