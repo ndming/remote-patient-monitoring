@@ -44,8 +44,8 @@ fun LoginScreen(
         UrgentTopBar(
             title = stringResource(id = R.string.ui_loginScreen_title),
             showNavigateBack = false,
-            showRightAction = true,
-            onRightAction = { /*TODO*/ }
+            showMoreContentButton = true,
+            enableMoreContent = true
         )
         Column(
             modifier = Modifier
