@@ -87,6 +87,9 @@ dependencies {
 
     // Jackson
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2'
+
+    // Swipe to refresh
+    implementation 'com.google.accompanist:accompanist-swiperefresh:0.24.6-alpha'
 }
 
 // Compiler flag to use experimental Compose APIs
