@@ -20,7 +20,7 @@ object MqttClientConfig {
 
     val SUBSCRIBE_QOS = AWSIotMqttQos.QOS1
 
-    const val MAX_AUTO_RECONNECTION_ATTEMPTS = 2
+    const val MAX_AUTO_RECONNECTION_ATTEMPTS = 1
     const val CLEAN_SESSION = true
     const val AUTO_RESUBSCRIBE = false
 }
