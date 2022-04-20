@@ -3,6 +3,7 @@ package com.hescul.urgent.ui.screens.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -113,7 +114,6 @@ fun HomeBottomBar(
 
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SubscribeSheet(
     patientViewModel: PatientViewModel,
@@ -221,7 +221,8 @@ fun SubscribeSheet(
                     },
                     colors = TextFieldDefaults.textFieldColors(
                         backgroundColor = MaterialTheme.colors.secondary
-                    )
+                    ),
+                    singleLine = true
                 )
                 Spacer(modifier = Modifier.padding(vertical = titlePadding))
             }
@@ -237,7 +238,8 @@ fun SubscribeSheet(
                 }
             }
             itemsIndexed(
-                items = patientViewModel.attributeInputList
+                items = patientViewModel.attributeInputList,
+                key = null
             ) { index, attribute ->
                 val exceedingPinnedMessage = stringResource(id = R.string.ui_homeScreen_exceedingPinnedAttributeMessage)
                 SubscribeSheetAttributeRow(
@@ -299,7 +301,8 @@ private fun SubscribeSheetAttributeRow(
             },
             placeholder = {
                 Text(text = stringResource(id = R.string.ui_homeScreen_keyFieldHint))
-            }
+            },
+            singleLine = true
         )
         Spacer(modifier = Modifier.padding(horizontal = 5.dp))
         TextField(
@@ -314,7 +317,8 @@ private fun SubscribeSheetAttributeRow(
             },
             placeholder = {
                 Text(text = stringResource(id = R.string.ui_homeScreen_valueFieldHint))
-            }
+            },
+            singleLine = true
         )
         Spacer(modifier = Modifier.padding(horizontal = 2.5.dp))
         IconButton(
