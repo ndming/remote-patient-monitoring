@@ -143,4 +143,30 @@ class MqttDoctorClient(clientId: String, endpoint: String) {
         mqttManager.subscribeToTopic(statusTopic,
             MqttClientConfig.SUBSCRIBE_QOS, statusSubscriptionCallback, messageCallback)
     }
+
+    fun unsubscribe(deviceId: String) {
+        val dataTopic = MqttClientConfig.DATA_TOPIC_PREFIX + deviceId
+        val statusTopic = MqttClientConfig.STATUS_TOPIC_PREFIX + deviceId
+        mqttManager.unsubscribeTopic(dataTopic)
+        mqttManager.unsubscribeTopic(statusTopic)
+    }
+
+    fun resubscribe(
+        devices: List<String>,
+        onDone: () -> Unit,
+        onEachFailure: (String) -> Unit,
+        messageCallback: (String, ByteArray) -> Unit
+    ) {
+        devices.forEach { deviceId ->
+            subscribe(
+                deviceId = deviceId,
+                onSubscriptionSuccess = {},
+                onSubscriptionFailure = {
+                    onEachFailure(deviceId)
+                },
+                onMessageCallback = messageCallback
+            )
+        }
+        onDone()
+    }
 }
