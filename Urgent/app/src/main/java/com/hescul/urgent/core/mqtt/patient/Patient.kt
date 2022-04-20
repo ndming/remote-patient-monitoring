@@ -19,8 +19,9 @@ import java.util.*
 
 class Patient(
     val deviceId: String,
-    val name: String
+    name: String
 ) {
+    var name by mutableStateOf(name)
     var status by mutableStateOf(DEFAULT_PATIENT_STATUS)
     var time by mutableStateOf(DEFAULT_UNKNOWN_VALUE)
         private set
@@ -31,22 +32,29 @@ class Patient(
     val attributes: MutableList<PatientAttribute> = mutableListOf()
 
     fun updateTimestamp(epoch: Long, locale: Locale) {
-        time = TIME_FORMATTER.withLocale(locale).format(Instant.ofEpochSecond(epoch))
+        time = TIME_FORMATTER.withLocale(locale).format(Instant.ofEpochSecond(epoch)).substringBefore('+').trimEnd()
     }
 
     companion object {
         const val DEFAULT_UNKNOWN_VALUE = "--"
         val DEFAULT_PATIENT_PICTURE = Icons.Outlined.AccountCircle
         val DEFAULT_PATIENT_STATUS = PatientStatus.Offline
-        val TIMESTAMP_ICON = Icons.Outlined.Schedule
 
         private val DEFAULT_ZONE = ZoneId.systemDefault()
         private val TIME_FORMATTER = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(DEFAULT_ZONE)
+
+        const val MAXIMUM_ATTRIBUTES_ALLOWED = 10
+        const val MAXIMUM_PINNED_ATTRIBUTES_ALLOWED = 3
 
         @Suppress("SpellCheckingInspection")
         val SAMPLE_PATIENT = Patient(
             deviceId = "RPMSOS0000",
             name = "Bling Bling"
+        )
+
+        val UNKNOWN_PATIENT = Patient(
+            deviceId = DEFAULT_UNKNOWN_VALUE,
+            name = DEFAULT_UNKNOWN_VALUE
         )
     }
 }
