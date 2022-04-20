@@ -67,21 +67,23 @@ class PatientViewModel(context: Context) : ViewModel() {
             onDone = { clientIdentityId ->
                 if (clientIdentityId.isNotEmpty()) {
                     Timber.tag(DEBUG_TAG).d("identityId: $clientIdentityId")
+                    this.identityId = clientIdentityId
                     mqttDoctorClient = MqttDoctorClient(
                         clientId = clientIdentityId,
                         endpoint = MqttBrokerConfig.END_POINT
                     )
-                    requestCheckAttachedPolicy(clientIdentityId)
+                    requestCheckAttachedPolicy()
                 }
             },
-            onFailure = { message ->
+            onFailure = {
+                val message = OBTAIN_IDENTITY_ID_FAILED + REFRESH_INSTRUCTION_POSTFIX
                 setStatus(message, true)
                 isProgressing = false
             }
         )
     }
 
-    private fun requestCheckAttachedPolicy(identityId: String) {
+    private fun requestCheckAttachedPolicy() {
         setStatus(CHECK_ATTACHED_POLICY_MESSAGE)
         MqttDoctorClient.isAttachedDoctorPolicy(
             credentialsProvider = credentialsProvider,
@@ -89,31 +91,35 @@ class PatientViewModel(context: Context) : ViewModel() {
             onDone = { isCheckAttachedPolicyFailed, isAttached ->
                 if (!isCheckAttachedPolicyFailed) {
                     if (isAttached) {
+                        this.attachedPolicies = true
                         requestConnect()
                     }
                     else {
-                        requestAttachPolicy(identityId)
+                        requestAttachPolicy()
                     }
                 }
             },
-            onFailure = { message ->
+            onFailure = {
+                val message = CHECK_ATTACHED_POLICY_FAILED + REFRESH_INSTRUCTION_POSTFIX
                 setStatus(message, true)
                 isProgressing = false
             }
         )
     }
 
-    private fun requestAttachPolicy(identityId: String) {
+    private fun requestAttachPolicy() {
         setStatus(ATTACH_POLICY_MESSAGE)
         MqttDoctorClient.attachDoctorPolicy(
             credentialsProvider = credentialsProvider,
             identityId = identityId,
             onDone = { isAttachPolicyFailed ->
                 if (!isAttachPolicyFailed) {
+                    this.attachedPolicies = true
                     requestConnect()
                 }
             },
-            onFailure = { message ->
+            onFailure = {
+                val message = ATTACH_POLICY_FAILED + REFRESH_INSTRUCTION_POSTFIX
                 setStatus(message, true)
                 isProgressing = false
             }
@@ -127,12 +133,15 @@ class PatientViewModel(context: Context) : ViewModel() {
                 when (iotStatus) {
                     AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected -> {
                         isConnected = true
-                        setStatus()
-                        isProgressing = false
+                        requestResubscribe {
+                            setStatus()
+                            isProgressing = false
+                        }
                     }
                     AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.ConnectionLost -> {
                         isConnected = false
-                        setStatus(CONNECTION_LOST_MESSAGE, true)
+                        val message = CONNECTION_LOST_MESSAGE + REFRESH_INSTRUCTION_POSTFIX
+                        setStatus(message, true)
                         isProgressing = false
                     }
                     else -> {
@@ -174,7 +183,7 @@ class PatientViewModel(context: Context) : ViewModel() {
             )
         )
         attributeInputList.forEach {  attribute ->
-            if (attribute.key.isNotBlank() && attribute.value.isNotBlank()) {
+            if (attribute.key.isNotBlank() || attribute.value.isNotBlank()) {
                 patients[0].attributes.add(attribute.clone())
             }
         }
@@ -183,11 +192,11 @@ class PatientViewModel(context: Context) : ViewModel() {
             onSubscriptionSuccess = {
                 isProgressing = false
             },
-            onSubscriptionFailure = { cause ->
+            onSubscriptionFailure = {
                 patients.removeAt(0)
                 isProgressing = false
                 val showErrorJob = viewModelScope.launch {
-                    setStatus(cause, true)
+                    setStatus(SUBSCRIBE_FAILED, true)
                     delay(MESSAGE_SHOW_TIME)
                 }
                 showErrorJob.invokeOnCompletion { setStatus() }
@@ -253,6 +262,16 @@ class PatientViewModel(context: Context) : ViewModel() {
         }
     }
 
+    private fun requestResubscribe(onDone: () -> Unit) {
+        mqttDoctorClient.resubscribe(
+            devices = patients.map { it.deviceId },
+            onDone = onDone,
+            messageCallback = this::onMessageArrive,
+            onEachFailure = { deviceId ->
+                patients.removeIf { it.deviceId == deviceId }
+            }
+        )
+    }
 
     var deviceIdInputText by mutableStateOf("")
         private set
@@ -270,7 +289,7 @@ class PatientViewModel(context: Context) : ViewModel() {
         nameInputText = text
     }
     fun onAddNewAttribute(exceedingMessage: String) {
-        if (attributeInputList.size >= MAXIMUM_ATTRIBUTES_ALLOWED) {
+        if (attributeInputList.size >= Patient.MAXIMUM_ATTRIBUTES_ALLOWED) {
             showAttributeEditWarning(exceedingMessage)
         }
         else {
@@ -278,7 +297,7 @@ class PatientViewModel(context: Context) : ViewModel() {
                 element = PatientAttribute(
                     key = "",
                     value = "",
-                    pinned = attributeInputList.size < MAXIMUM_PINNED_ALLOWED
+                    pinned = attributeInputList.size < Patient.MAXIMUM_PINNED_ATTRIBUTES_ALLOWED
                 )
             )
         }
@@ -287,7 +306,7 @@ class PatientViewModel(context: Context) : ViewModel() {
         when(attribute.pinned) {
             true -> attribute.pinned = false
             false -> {
-                if (attributeInputList.count { it.pinned } < MAXIMUM_PINNED_ALLOWED ) {
+                if (attributeInputList.count { it.pinned } < Patient.MAXIMUM_PINNED_ATTRIBUTES_ALLOWED ) {
                     attribute.pinned = true
                 }
                 else {
@@ -306,17 +325,59 @@ class PatientViewModel(context: Context) : ViewModel() {
     fun isDeviceIdInputTextError() = deviceIdInputText.isNotEmpty() && !InfoValidator.isDeviceIdValid(deviceIdInputText)
     fun isSubscribeButtonEnable() = InfoValidator.isDeviceIdValid(deviceIdInputText) && !isProgressing && isConnected
 
+    fun onDeletePatientRequest(patient: Patient, onDone: () -> Unit) {
+        mqttDoctorClient.unsubscribe(patient.deviceId)
+        patients.remove(patient)
+        onDone()
+    }
+
+    private var identityId = ""
+    private var attachedPolicies = false
+    var isRefreshing by mutableStateOf(false)
+        private set
+    fun onRefreshRequest() {
+        val showRefreshJob = viewModelScope.launch {
+            isRefreshing = true
+            delay(1000L)
+            isRefreshing = false
+        }
+        showRefreshJob.invokeOnCompletion {
+            viewModelScope.launch(Dispatchers.IO) {
+                isProgressing = true
+                requestRefresh()
+            }
+        }
+    }
+
+    private fun requestRefresh() {
+        if (identityId.isBlank()) {
+            requestObtainIdentityId()
+        }
+        else if (!attachedPolicies) {
+            requestAttachPolicy()
+        }
+        else if (!isConnected) {
+            requestConnect()
+        }
+        else {
+            isProgressing = false
+        }
+    }
+
     companion object {
         private const val DEBUG_TAG = "mqtt"
         private const val OBTAIN_IDENTITY_ID_MESSAGE = "Obtaining identity id"
         private const val CHECK_ATTACHED_POLICY_MESSAGE = "Checking attached policies"
         private const val ATTACH_POLICY_MESSAGE = "Attaching required policies"
-        private const val CONNECTION_LOST_MESSAGE = "Connection lost"
+        private const val CONNECTION_LOST_MESSAGE = "Connection lost."
+
+        private const val OBTAIN_IDENTITY_ID_FAILED = "Failed to obtain identity id."
+        private const val CHECK_ATTACHED_POLICY_FAILED = "Failed to check attached policies."
+        private const val ATTACH_POLICY_FAILED = "Failed to attach policy."
+        private const val SUBSCRIBE_FAILED = "Failed to subscribe. Please try again."
+        private const val REFRESH_INSTRUCTION_POSTFIX = " Swipe down to refresh."
 
         private const val MESSAGE_SHOW_TIME = 3000L  // in ms
-
-        private const val MAXIMUM_ATTRIBUTES_ALLOWED = 8
-        private const val MAXIMUM_PINNED_ALLOWED = 3
     }
 
     override fun onCleared() {
