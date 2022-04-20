@@ -4,7 +4,9 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
@@ -36,14 +38,13 @@ fun PatientChip(
     chipPadding: Dp = 8.dp,
     enabled: Boolean = true,
 ) {
-    val chipColor = MaterialTheme.colors.onBackground.copy(0.05f)
     Chip(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = chipPadding),
         onClick = onCLick,
         colors = ChipDefaults.chipColors(
-            backgroundColor = chipColor
+            backgroundColor = MaterialTheme.colors.secondaryVariant
         ),
         shape = MaterialTheme.shapes.small.copy(CornerSize(16.dp)),
         enabled = enabled
@@ -96,13 +97,14 @@ private fun PatientPictureSlot(
 }
 
 @Composable
-private fun PatientAttributeSlot(
+fun PatientAttributeSlot(
     attributes: MutableList<PatientAttribute>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textSize: TextUnit = MaterialTheme.typography.caption.fontSize
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
+        modifier = modifier.horizontalScroll(rememberScrollState())
     ) {
         var passedFirst = false
         var isEmpty = true
@@ -126,7 +128,7 @@ private fun PatientAttributeSlot(
                 }
                 Text(
                     text = attribute.value,
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.caption.copy(fontSize = textSize),
                     color = MaterialTheme.colors.onSurface.copy(0.7f)
                 )
             }
