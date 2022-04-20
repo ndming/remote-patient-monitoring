@@ -18,6 +18,7 @@ enum class UrgentScreens {
     Home,
     Patient,
     Doctor,
+    Profile,
 }
 
 sealed class HomeScreens(val route: String, @StringRes val label: Int, val icon: ImageVector, @StringRes val cd: Int) {
