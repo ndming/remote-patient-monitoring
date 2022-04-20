@@ -18,8 +18,10 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.hescul.urgent.ui.theme.UrgentTheme
 import com.hescul.urgent.ui.versatile.UrgentTopBar
 import com.hescul.urgent.R
+import com.hescul.urgent.core.mqtt.patient.Patient
 import com.hescul.urgent.navigation.HomeScreens
 import com.hescul.urgent.ui.screens.home.doctor.DoctorScreen
+import com.hescul.urgent.ui.screens.home.doctor.DoctorViewModel
 import com.hescul.urgent.ui.screens.home.patient.*
 import kotlinx.coroutines.launch
 
@@ -28,10 +30,14 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     homeViewModel: HomeViewModel,
     patientViewModel: PatientViewModel,
+    doctorViewModel: DoctorViewModel,
+    onPatientSelect: (Patient) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val localContext = LocalContext.current
     LaunchedEffect(Unit) {
-        patientViewModel.onLaunch()
+        if (!patientViewModel.isLaunched) patientViewModel.onLaunch()
+        if (!doctorViewModel.isLaunched) doctorViewModel.onLaunch(localContext)
     }
     val patientListState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
@@ -70,29 +76,31 @@ fun HomeScreen(
                         else -> R.string.ui_homeScreen_patientScreenTitle
                     }),
                     showNavigateBack = false,
-                    showRightAction = false
+                    showMoreContentButton = true,
+                    enableMoreContent = true
                 )
             },
             floatingActionButton = {
-                HomeFAB(
-                    onCLick = {
-                        coroutineScope.launch {
-                            sheetState.animateTo(
-                                targetValue = ModalBottomSheetValue.Expanded,
-                                anim = tween(durationMillis = 800)
-                            )
-                        }
-                    },
-                    extended = patientListState.firstVisibleItemScrollOffset == 0,
-                    enabled = !patientViewModel.isProgressing
-                )
+                if (homeViewModel.currentScreen == HomeScreens.Patient.route) {
+                    HomeFAB(
+                        onCLick = {
+                            coroutineScope.launch {
+                                sheetState.animateTo(
+                                    targetValue = ModalBottomSheetValue.Expanded,
+                                    anim = tween(durationMillis = 800)
+                                )
+                            }
+                        },
+                        extended = patientListState.firstVisibleItemScrollOffset == 0,
+                        enabled = !patientViewModel.isProgressing && patientViewModel.isConnected
+                    )
+                }
             },
             bottomBar = {
                 HomeBottomBar(
                     homeNavController = homeNavController,
                     screens = listOf(HomeScreens.Patient, HomeScreens.Doctor),
-                    onScreenChange = homeViewModel::onCurrentScreenChange,
-                    enabled = !patientViewModel.isProgressing
+                    onScreenChange = homeViewModel::onCurrentScreenChange
                 )
             }
         ) { contentPadding ->
@@ -112,7 +120,7 @@ fun HomeScreen(
                     exitTransition = {
                         fadeOut(animationSpec = tween(durationMillis = 400))
                     }
-                ) { PatientScreen(patientViewModel, patientListState) }
+                ) { PatientScreen(patientViewModel, patientListState, onPatientSelect = onPatientSelect) }
                 composable(
                     HomeScreens.Doctor.route,
                     enterTransition = {
@@ -124,7 +132,14 @@ fun HomeScreen(
                     exitTransition = {
                         fadeOut(animationSpec = tween(durationMillis = 400))
                     }
-                ) { DoctorScreen() }
+                ) { DoctorScreen(
+                    doctorViewModel =  doctorViewModel,
+                    connected = patientViewModel.isConnected,
+                    onNavigateBack = {
+                        homeViewModel.onCurrentScreenChange(HomeScreens.Patient.route)
+                        homeNavController.popBackStack()
+                    }
+                ) }
             }
         }
     }
@@ -135,11 +150,14 @@ fun HomeScreen(
 fun PreviewHomeScreen() {
     val homeViewModel = HomeViewModel()
     val patientViewModel = PatientViewModel(LocalContext.current)
+    val doctorViewModel = DoctorViewModel()
     UrgentTheme {
         Surface {
             HomeScreen(
                 homeViewModel = homeViewModel,
                 patientViewModel = patientViewModel,
+                doctorViewModel = doctorViewModel,
+                onPatientSelect = {}
             )
         }
     }
