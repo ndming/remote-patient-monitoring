@@ -24,6 +24,10 @@
     <string name="cd_addCircleIcon">Add an attribute</string>
     <string name="cd_homeIcon">Home Icon</string>
     <string name="cd_personIcon">Person Icon</string>
+    <string name="cd_settingsIcon">Settings Icon</string>
+    <string name="cd_helpIcon">Help Icon</string>
+    <string name="cd_expandMoreIcon">Expand More</string>
+    <string name="cd_expandLessIcon">Expand Less</string>
 
     <string name="ui_signUpScreen_title">Sign Up</string>
     <string name="ui_signUpScreen_defaultFailCause">Sign up failed. Please try again.</string>
@@ -90,4 +94,23 @@
     <string name="ui_profileScreen_pulseIndexUnit">bpm</string>
     <string name="ui_profileScreen_spo2IndexName">SPo2</string>
     <string name="ui_profileScreen_spo2IndexUnit">%</string>
+
+    <string name="ui_doctorScreen_defaultFetchingFailCause">Failed to fetch user attributes</string>
+    <string name="ui_doctorScreen_emailKeyTranslate">Email</string>
+    <string name="ui_doctorScreen_nameKeyTranslate">Name</string>
+    <string name="ui_doctorScreen_subKeyTranslate">User ID</string>
+    <string name="ui_doctorScreen_emailVerifiedKeyTranslate">Email Verified</string>
+    <string name="ui_doctorScreen_optionAccountTitle">My Account</string>
+    <string name="ui_doctorScreen_optionSettingsTitle">Settings</string>
+    <string name="ui_doctorScreen_optionHelpTitle">Help Center</string>
+    <string name="ui_doctorScreen_futurePromise">Come back later</string>
+
+    <string name="ui_profileScreen_title">Profile Details</string>
+    <string name="ui_profileScreen_indexDataHeader">measured at this time</string>
+    <string name="ui_profileScreen_attributesHeader">Patient attributes</string>
+    <string name="ui_profileScreen_attributeName">Name</string>
+    <string name="ui_profileScreen_indexHeader">Index</string>
+    <string name="ui_profileScreen_numOfSensorsEntry">No. of sensors</string>
+    <string name="ui_profileScreen_lastUpdateEntry">Update</string>
+    <string name="ui_profileScreen_deletePatientButton">DELETE PATIENT</string>
 </resources>
