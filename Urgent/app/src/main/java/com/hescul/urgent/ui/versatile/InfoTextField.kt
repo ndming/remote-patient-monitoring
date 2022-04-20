@@ -49,7 +49,6 @@ enum class InfoFieldType(@StringRes val label: Int, @StringRes val hint: Int) {
  * @param modifier the modifier for this element
  * @param enabled when set to false, the field is disabled
  * @param onImeAction (event) notify caller of [ImeAction.Done] events
- * @param maxLines maximum number of input lines
  * @param isError when set to True, the [OutlinedTextField] will reacts to display the error state
  * @param visualTransform transforms the input text into different visuals
  * @param enableTrailingContent when set to true, the trailing action content will be available
@@ -69,7 +68,6 @@ fun InfoTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Done,
     onImeAction: () -> Unit = {},
-    maxLines: Int = 1,
     isError: Boolean = false,
     visualTransform: VisualTransformation = VisualTransformation.None,
     enableTrailingContent: Boolean = false,
@@ -104,7 +102,7 @@ fun InfoTextField(
                 keyboardController?.hide()
             }
         ),
-        maxLines = maxLines,
+        singleLine = true,
         isError = isError,
         visualTransformation = visualTransform,
         modifier = modifier
