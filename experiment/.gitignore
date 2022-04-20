@@ -143,3 +143,12 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# artifacts
+jsonSample.py
+jsonTest.py
+pub.py
+sub.py
+subAWS.py
+auth/RPMDOC
+auth/RPMSOS
