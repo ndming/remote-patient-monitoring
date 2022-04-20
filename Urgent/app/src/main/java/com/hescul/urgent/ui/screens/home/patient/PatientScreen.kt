@@ -7,15 +7,24 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.hescul.urgent.R
 import com.hescul.urgent.core.mqtt.patient.Patient
+import com.hescul.urgent.ui.theme.UrgentTheme
 
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -23,11 +32,12 @@ import com.hescul.urgent.core.mqtt.patient.Patient
 fun PatientScreen(
     patientViewModel: PatientViewModel,
     patientListState: LazyListState,
+    onPatientSelect: (Patient) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxSize()
     ) {
         // progress holder
         AnimatedVisibility(visible = patientViewModel.isProgressing) {
@@ -61,23 +71,41 @@ fun PatientScreen(
             }
         }
 
-        // home content
-        if (patientViewModel.isLaunched) {
-            if (patientViewModel.patients.isNotEmpty()) {
-                PatientProfiles(
-                    patients = patientViewModel.patients,
-                    listState = patientListState,
-                    modifier = Modifier.fillMaxWidth(),
-                    isProgressing = patientViewModel.isProgressing
+        SwipeRefresh(
+            modifier = Modifier.fillMaxSize(),
+            state = rememberSwipeRefreshState(isRefreshing = patientViewModel.isRefreshing),
+            onRefresh = { patientViewModel.onRefreshRequest() },
+            swipeEnabled = !patientViewModel.isProgressing && !patientViewModel.isRefreshing,
+            indicator = { state, trigger ->
+                SwipeRefreshIndicator(
+                    state = state,
+                    refreshTriggerDistance = trigger,
+                    backgroundColor = MaterialTheme.colors.surface,
+                    contentColor = MaterialTheme.colors.primary
                 )
             }
-            else {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    EmptyPatientGuide()
+        ) {
+            // patient content
+            if (patientViewModel.isLaunched) {
+                if (patientViewModel.patients.isNotEmpty()) {
+                    PatientProfiles(
+                        patients = patientViewModel.patients,
+                        listState = patientListState,
+                        modifier = Modifier.fillMaxSize(),
+                        enabled = !patientViewModel.isProgressing && !patientViewModel.isRefreshing,
+                        onPatientSelect = onPatientSelect
+                    )
+                }
+                else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        EmptyPatientGuide()
+                    }
                 }
             }
         }
@@ -90,7 +118,8 @@ fun PatientScreen(
 private fun PatientProfiles(
     patients: List<Patient>,
     listState: LazyListState,
-    isProgressing: Boolean,
+    enabled: Boolean,
+    onPatientSelect: (Patient) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val contentPadding = 12.dp
@@ -114,13 +143,28 @@ private fun PatientProfiles(
             key = { it.deviceId }
         ) { patient -> PatientChip(
             patient = patient,
-            onCLick = { /*TODO*/ },
+            onCLick = { onPatientSelect(patient) },
             chipPadding = contentPadding,
             modifier = Modifier.animateItemPlacement(
                 animationSpec = tween(200)
             ),
-            enabled = !isProgressing
+            enabled = enabled
         )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewPatientScreen() {
+    val patientViewModel = PatientViewModel(LocalContext.current)
+    UrgentTheme {
+        Surface {
+            PatientScreen(
+                patientViewModel = patientViewModel,
+                patientListState = rememberLazyListState(),
+                onPatientSelect = {}
+            )
         }
     }
 }
