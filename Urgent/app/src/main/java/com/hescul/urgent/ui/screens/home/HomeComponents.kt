@@ -3,24 +3,25 @@ package com.hescul.urgent.ui.screens.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircleOutline
-import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.filled.RemoveCircleOutline
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ import com.hescul.urgent.ui.screens.home.patient.PatientViewModel
 import com.hescul.urgent.ui.theme.UrgentTheme
 import com.hescul.urgent.ui.versatile.InfoFieldType
 import com.hescul.urgent.ui.versatile.InfoTextField
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeFAB(
@@ -114,6 +116,7 @@ fun HomeBottomBar(
 
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SubscribeSheet(
     patientViewModel: PatientViewModel,
@@ -122,6 +125,9 @@ fun SubscribeSheet(
 ) {
     val contentPadding = 15.dp
     val titlePadding = 10.dp
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val keyboardController = LocalSoftwareKeyboardController.current
     Column(
         modifier = modifier
             .padding(
@@ -186,57 +192,67 @@ fun SubscribeSheet(
         Spacer(modifier = Modifier.padding(vertical = contentPadding))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = stringResource(id = R.string.ui_homeScreen_attributeFieldTitle),
                 style = MaterialTheme.typography.h5,
             )
             val exceedingAttributeMessage = stringResource(id = R.string.ui_homeScreen_exceedingAttributeMessage)
-            IconButton(
+            TextButton(
                 onClick = {
                     patientViewModel.onAddNewAttribute(exceedingAttributeMessage)
+                    coroutineScope.launch {
+                        lazyListState.animateScrollToItem(patientViewModel.attributeInputList.size)
+                    }
                 }
             ) {
-                Icon(
-                    imageVector = Icons.Filled.AddCircleOutline,
-                    contentDescription = stringResource(id = R.string.cd_addCircleIcon),
-                    tint = MaterialTheme.colors.primary
+                Text(
+                    text = stringResource(id = R.string.ui_homeScreen_addAttributeButton),
+                    style = MaterialTheme.typography.h6
                 )
             }
+        }
+        TextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 5.dp),
+            value = patientViewModel.nameInputText,
+            onValueChange = patientViewModel::onNameInputTextChange,
+            label = {
+                Text(text = stringResource(id = R.string.ui_homeScreen_nameFieldLabel))
+            },
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = MaterialTheme.colors.secondary
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                }
+            )
+        )
+        Spacer(modifier = Modifier.padding(vertical = titlePadding))
+        AnimatedVisibility(visible = patientViewModel.attributeWarning.isNotEmpty()) {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = patientViewModel.attributeWarning,
+                color = MaterialTheme.colors.error,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.padding(vertical = titlePadding * 2))
         }
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth(),
             contentPadding = PaddingValues(vertical = titlePadding),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            state = lazyListState
         ) {
-            item {
-                TextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = patientViewModel.nameInputText,
-                    onValueChange = patientViewModel::onNameInputTextChange,
-                    label = {
-                        Text(text = stringResource(id = R.string.ui_homeScreen_nameFieldLabel))
-                    },
-                    colors = TextFieldDefaults.textFieldColors(
-                        backgroundColor = MaterialTheme.colors.secondary
-                    ),
-                    singleLine = true
-                )
-                Spacer(modifier = Modifier.padding(vertical = titlePadding))
-            }
-            item {
-                AnimatedVisibility(visible = patientViewModel.attributeWarning.isNotEmpty()) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = patientViewModel.attributeWarning,
-                        color = MaterialTheme.colors.error,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.padding(vertical = titlePadding * 2))
-                }
-            }
             itemsIndexed(
                 items = patientViewModel.attributeInputList,
                 key = null
@@ -274,6 +290,7 @@ fun PreviewSubscribeSheet() {
 }
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun SubscribeSheetAttributeRow(
     keyText: String,
@@ -285,42 +302,11 @@ private fun SubscribeSheetAttributeRow(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TextField(
-            modifier = Modifier.fillMaxWidth(0.3f),
-            value = keyText,
-            onValueChange = onKeyTextChange,
-            colors = TextFieldDefaults.textFieldColors(
-                backgroundColor = MaterialTheme.colors.secondary
-            ),
-            label = {
-                Text(text = stringResource(id = R.string.ui_homeScreen_keyFieldLabel))
-            },
-            placeholder = {
-                Text(text = stringResource(id = R.string.ui_homeScreen_keyFieldHint))
-            },
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.padding(horizontal = 5.dp))
-        TextField(
-            modifier = Modifier.fillMaxWidth(0.7f),
-            value = valueText,
-            onValueChange = onValueTextChange,
-            colors = TextFieldDefaults.textFieldColors(
-                backgroundColor = MaterialTheme.colors.secondary
-            ),
-            label = {
-                Text(text = stringResource(id = R.string.ui_homeScreen_valueFieldLabel))
-            },
-            placeholder = {
-                Text(text = stringResource(id = R.string.ui_homeScreen_valueFieldHint))
-            },
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.padding(horizontal = 2.5.dp))
         IconButton(
             onClick = onPinStateChange
         ) {
@@ -330,8 +316,7 @@ private fun SubscribeSheetAttributeRow(
                     contentDescription = stringResource(id = R.string.cd_filledPushPinIcon),
                     tint = MaterialTheme.colors.primary
                 )
-            }
-            else {
+            } else {
                 Icon(
                     imageVector = Icons.Outlined.PushPin,
                     contentDescription = stringResource(id = R.string.cd_outlinedPushPinIcon),
@@ -348,6 +333,54 @@ private fun SubscribeSheetAttributeRow(
                 tint = MaterialTheme.colors.error
             )
         }
+        Spacer(modifier = Modifier.padding(horizontal = 5.dp))
+        TextField(
+            modifier = Modifier.height(TextFieldDefaults.MinHeight).fillMaxWidth(0.4f),
+            value = keyText,
+            onValueChange = onKeyTextChange,
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = MaterialTheme.colors.secondary
+            ),
+            label = {
+                Text(text = stringResource(id = R.string.ui_homeScreen_keyFieldLabel))
+            },
+            placeholder = {
+                Text(text = stringResource(id = R.string.ui_homeScreen_keyFieldHint))
+            },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                }
+            )
+        )
+        Spacer(modifier = Modifier.padding(horizontal = 5.dp))
+        TextField(
+            modifier = Modifier.height(TextFieldDefaults.MinHeight).fillMaxWidth(),
+            value = valueText,
+            onValueChange = onValueTextChange,
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = MaterialTheme.colors.secondary
+            ),
+            label = {
+                Text(text = stringResource(id = R.string.ui_homeScreen_valueFieldLabel))
+            },
+            placeholder = {
+                Text(text = stringResource(id = R.string.ui_homeScreen_valueFieldHint))
+            },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                }
+            )
+        )
     }
 }
 
