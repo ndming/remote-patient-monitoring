@@ -6,17 +6,17 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hescul.urgent.core.mqtt.doctor.Doctor
 import com.hescul.urgent.ui.theme.UrgentTheme
 import com.hescul.urgent.R
@@ -27,11 +27,20 @@ fun DoctorScreen(
     doctorViewModel: DoctorViewModel,
     connected: Boolean,
     onNavigateBack: () -> Unit,
+    onSignOutDone: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    BackHandler {
+    val localContext = LocalContext.current
+    BackHandler(enabled = !doctorViewModel.isProgressing) {
         onNavigateBack()
     }
+    DoctorSignOutAlertDialog(
+        showAlertDialog = doctorViewModel.showSignOutAlertDialog,
+        onConfirmSignOut = {
+            doctorViewModel.onSignOutConfirm(localContext, onSignOutDone)
+        },
+        onDismissRequest = doctorViewModel::onSignOutDismiss
+    )
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -72,12 +81,12 @@ fun DoctorScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val contentPadding = 10.dp
-                Spacer(modifier = Modifier.padding(vertical = 20.dp))
+                Spacer(modifier = Modifier.padding(vertical = contentPadding))
                 DoctorPicture(connected = connected)
                 Spacer(modifier = Modifier.padding(contentPadding))
                 Text(
@@ -115,6 +124,21 @@ fun DoctorScreen(
                     }
                     Spacer(modifier = Modifier.padding(contentPadding))
                 }
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        doctorViewModel.onSignOutRequest()
+                    },
+                    enabled = !doctorViewModel.isProgressing,
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        modifier = Modifier.padding(bottom = 10.dp, top = 12.5.dp),
+                        text = stringResource(id = R.string.ui_doctorScreen_signOutButton),
+                        style = MaterialTheme.typography.h5.copy(fontSize = 20.sp),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -129,7 +153,8 @@ fun PreviewDoctorScreen() {
             DoctorScreen(
                 doctorViewModel = doctorViewModel,
                 connected = true,
-                onNavigateBack = {}
+                onNavigateBack = {},
+                onSignOutDone = {}
             )
         }
     }
