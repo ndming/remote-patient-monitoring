@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hescul.urgent.R
@@ -41,8 +42,8 @@ fun ProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val contentPadding = 20.dp
@@ -50,6 +51,7 @@ fun ProfileScreen(
             PatientProfileCard(patient = profileViewModel.patient)
             Spacer(modifier = Modifier.padding(vertical = contentPadding))
             PatientProfileIndex(
+                profileViewModel.patient.deviceId,
                 numOfSensors = profileViewModel.patient.data.size,
                 timestamp = profileViewModel.patient.time
             )
@@ -78,9 +80,10 @@ fun ProfileScreen(
                 shape = MaterialTheme.shapes.small
             ) {
                 Text(
-                    modifier = Modifier.padding(vertical = 10.dp),
+                    modifier = Modifier.padding(bottom = 10.dp, top = 12.5.dp),
                     text = stringResource(id = R.string.ui_profileScreen_deletePatientButton),
-                    style = MaterialTheme.typography.h5
+                    style = MaterialTheme.typography.h5,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
             Spacer(modifier = Modifier.padding(vertical = contentPadding))
