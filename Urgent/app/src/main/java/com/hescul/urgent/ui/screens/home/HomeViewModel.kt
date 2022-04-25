@@ -13,4 +13,8 @@ class HomeViewModel : ViewModel() {
     fun onCurrentScreenChange(route: String) {
         currentScreen = route
     }
+
+    fun resetSession() {
+        currentScreen = HomeScreens.Patient.route
+    }
 }
