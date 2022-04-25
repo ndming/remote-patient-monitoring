@@ -109,7 +109,7 @@ fun PatientAttributeSlot(
         var passedFirst = false
         var isEmpty = true
         attributes.forEach { attribute ->
-            if (attribute.pinned) {
+            if (attribute.pinned && attribute.value.isNotBlank()) {
                 isEmpty = false
                 if (!passedFirst) {
                     passedFirst = true
@@ -233,5 +233,47 @@ private fun PreviewPatientChip() {
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
+    }
+}
+
+@Composable
+fun LoginExpirationAlertDialog(
+    showAlertDialog: Boolean,
+    onSignOut: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (showAlertDialog) {
+        AlertDialog(
+            modifier = modifier,
+            onDismissRequest = onDismiss,
+            title = {
+                Row {
+                    Text(
+                        text = stringResource(id = R.string.ui_homeScreen_alertTitle),
+                        color = MaterialTheme.colors.primary
+                    )
+                }
+            },
+            text = {
+                Text(text = stringResource(id = R.string.ui_homeScreen_alertContent))
+            },
+            shape = MaterialTheme.shapes.small,
+            buttons = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = 20.dp, bottom = 10.dp),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    TextButton(onClick = onSignOut) {
+                        Text(
+                            text = stringResource(id = R.string.ui_homeScreen_alertConfirmButton),
+                            color = MaterialTheme.colors.primary
+                        )
+                    }
+                }
+            }
+        )
     }
 }
