@@ -152,3 +152,4 @@ sub.py
 subAWS.py
 auth/RPMDOC
 auth/RPMSOS
+auth/RPMTEST
