@@ -76,6 +76,7 @@
     <string name="ui_homeScreen_subscriptionFailDefaultFailCause">Subscription failed</string>
     <string name="ui_homeScreen_subscribeSheetTitle">Add a patient</string>
     <string name="ui_homeScreen_subscribeButton">Subscribe</string>
+    <string name="ui_homeScreen_addAttributeButton">Add</string>
     <string name="ui_homeScreen_deviceIdFieldLabel">Device ID</string>
     <string name="ui_homeScreen_deviceIdFieldHint">eg. RPMSOS0000</string>
     <string name="ui_homeScreen_attributeFieldTitle">Optional attributes</string>
@@ -86,9 +87,12 @@
     <string name="ui_homeScreen_valueFieldLabel">value</string>
     <string name="ui_homeScreen_valueFieldHint">eg. Male</string>
     <string name="ui_homeScreen_exceedingPinnedAttributeMessage">Maximum 3 pinned attributes allowed</string>
-    <string name="ui_homeScreen_exceedingAttributeMessage">Maximum 8 attributes allowed</string>
+    <string name="ui_homeScreen_exceedingAttributeMessage">Maximum 10 attributes allowed</string>
     <string name="ui_homeScreen_profileScreenLabel">Patients</string>
     <string name="ui_homeScreen_doctorScreenLabel">Personal</string>
+    <string name="ui_homeScreen_alertTitle">SESSION EXPIRED</string>
+    <string name="ui_homeScreen_alertContent">The credentials for your account has expired. Please login again.</string>
+    <string name="ui_homeScreen_alertConfirmButton">SIGN OUT</string>
 
     <string name="ui_profileScreen_pulseIndexName">Pulse</string>
     <string name="ui_profileScreen_pulseIndexUnit">bpm</string>
@@ -104,12 +108,18 @@
     <string name="ui_doctorScreen_optionSettingsTitle">Settings</string>
     <string name="ui_doctorScreen_optionHelpTitle">Help Center</string>
     <string name="ui_doctorScreen_futurePromise">Come back later</string>
+    <string name="ui_doctorScreen_signOutButton">SIGN OUT</string>
+    <string name="ui_doctorScreen_alertTitle">LEAVE THE SESSION?</string>
+    <string name="ui_doctorScreen_alertContent">You will need to provide your login credentials on next launch.</string>
+    <string name="ui_doctorScreen_alertDismissButton">DISMISS</string>
+    <string name="ui_doctorScreen_alertConfirmButton">SIGN OUT</string>
 
     <string name="ui_profileScreen_title">Profile Details</string>
     <string name="ui_profileScreen_indexDataHeader">measured at this time</string>
     <string name="ui_profileScreen_attributesHeader">Patient attributes</string>
     <string name="ui_profileScreen_attributeName">Name</string>
     <string name="ui_profileScreen_indexHeader">Index</string>
+    <string name="ui_profileScreen_deviceIdEntry">Device ID</string>
     <string name="ui_profileScreen_numOfSensorsEntry">No. of sensors</string>
     <string name="ui_profileScreen_lastUpdateEntry">Update</string>
     <string name="ui_profileScreen_deletePatientButton">DELETE PATIENT</string>
