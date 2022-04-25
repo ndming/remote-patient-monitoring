@@ -317,6 +317,18 @@ class CognitoAuthenticator {
             return createUserPool(context).currentUser.userId
         }
 
+        @JvmStatic
+        fun requestSignOut(
+            context: Context,
+            userId: String,
+        ) {
+            // obtain the cognito user
+            val cognitoUser = createUserPool(context).getUser(userId)
+
+            // request sign out
+            cognitoUser.signOut()
+        }
+
         /**
          * Request the identity id of the user associated to this Credentials Provider.
          * Must NOT be called in the UI thread.
