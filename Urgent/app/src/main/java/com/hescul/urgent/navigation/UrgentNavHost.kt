@@ -48,7 +48,14 @@ fun UrgentNavHost(
                     val openingViewModel = viewModels.openingViewModel
                     OpeningScreen(
                         openingViewModel = openingViewModel,
-                        onDone = {
+                        onAutoLoginSuccess = { userSession ->
+                            viewModels.patientViewModel.updateCredentialsProvider(userSession)
+                            navController.navigate(UrgentScreens.Home.name) {
+                                popUpTo(UrgentScreens.Opening.name) { inclusive = true }
+                            }
+                        },
+                        onAutoLoginFailure = { userId ->
+                            viewModels.loginViewModel.onEmailTextInputChange(userId)
                             navController.navigate(UrgentScreens.Login.name) {
                                 popUpTo(UrgentScreens.Opening.name) { inclusive = true }
                             }
@@ -177,6 +184,13 @@ fun UrgentNavHost(
                         onPatientSelect = { patient ->
                             viewModels.profileViewModel.updatePatient(patient)
                             navController.navigate(UrgentScreens.Profile.name)
+                        },
+                        onSignOut = {
+                            navController.navigate(UrgentScreens.Login.name) {
+                                popUpTo(UrgentScreens.Home.name) {
+                                    inclusive = true
+                                }
+                            }
                         }
                     )
                 }
