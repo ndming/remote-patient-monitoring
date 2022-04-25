@@ -50,9 +50,6 @@ class LoginViewModel : ViewModel() {
         failCause = ""
         isProgressing = true
     }
-    private fun onLogInSuccess() {
-        isProgressing = false
-    }
     private fun onLogInFailure(cause: String) {
         isProgressing = false
         isNotConfirmed = cause == USER_NOT_CONFIRMED_MESSAGE
@@ -64,7 +61,7 @@ class LoginViewModel : ViewModel() {
             context = context,
             userId = emailTextInput,
             onLoginSuccess = { userSession ->
-                onLogInSuccess()
+                isProgressing = false
                 onLogInDone(userSession)
             },
             onLoginFailure = { cause ->
@@ -86,7 +83,7 @@ class LoginViewModel : ViewModel() {
             context = context,
             userId = emailTextInput,
             onResendConfirmationSuccess = { codeDeliveryDetails ->
-                onLogInSuccess()
+                isProgressing = false
                 onDone(emailTextInput, codeDeliveryDetails)
             },
             onResendConfirmationFailure = { cause ->
