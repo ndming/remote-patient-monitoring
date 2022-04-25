@@ -4,7 +4,9 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -13,16 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hescul.urgent.R
-import com.hescul.urgent.UrgentApplication
 import com.hescul.urgent.core.mqtt.doctor.Doctor
 import com.hescul.urgent.core.mqtt.patient.*
 import com.hescul.urgent.ui.screens.home.patient.PatientAttributeSlot
@@ -62,7 +61,6 @@ fun PatientProfileCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         backgroundColor = cardColor,
-        contentColor = cardColor,
         shape = MaterialTheme.shapes.small,
         border = BorderStroke(width = 0.dp, cardColor),
         elevation = 0.dp
@@ -89,12 +87,16 @@ fun PatientProfileCard(
             Column(
                 modifier = Modifier.padding(horizontal = 20.dp)
             ) {
-                Text(
-                    text = patient.name.ifBlank { patient.deviceId },
-                    style = MaterialTheme.typography.h6.copy(fontSize = 24.sp),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines =  1
-                )
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())) {
+                    Text(
+                        text = patient.name.ifBlank { patient.deviceId },
+                        style = MaterialTheme.typography.h6.copy(fontSize = 24.sp),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines =  1
+                    )
+                }
                 Spacer(modifier = Modifier.padding(vertical = 5.dp))
                 PatientAttributeSlot(
                     attributes = patient.attributes,
@@ -246,6 +248,7 @@ private fun PreviewPatientProfileAttributes() {
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun PatientProfileIndex(
+    deviceId: String,
     numOfSensors: Int,
     timestamp: String,
     modifier: Modifier = Modifier
@@ -253,6 +256,21 @@ fun PatientProfileIndex(
     Column(modifier = modifier) {
         PatientProfileHeader(header = stringResource(id = R.string.ui_profileScreen_indexHeader))
         Spacer(modifier = Modifier.padding(vertical = headerPadding))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(id = R.string.ui_profileScreen_deviceIdEntry),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colors.onSurface.copy(0.4f)
+            )
+            Text(
+                text = deviceId,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Spacer(modifier = Modifier.padding(vertical = 5.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -307,7 +325,9 @@ private fun PreviewPatientProfileIndex() {
     patient.updateTimestamp(System.currentTimeMillis() / 1000, locale = Locale.ENGLISH)
     UrgentTheme {
         Surface {
+            @Suppress("SpellCheckingInspection")
             PatientProfileIndex(
+                deviceId = "RPMSOS0000",
                 numOfSensors = 2,
                 timestamp = patient.time
             )
