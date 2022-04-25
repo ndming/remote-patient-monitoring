@@ -2,6 +2,7 @@ package com.hescul.urgent
 
 import android.app.Application
 import android.content.res.Configuration
+import org.conscrypt.BuildConfig
 import timber.log.Timber
 import java.util.*
 
