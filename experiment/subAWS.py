@@ -5,15 +5,18 @@ import json
 ENDPOINT = "a2r0f2fq44oocy-ats.iot.us-east-1.amazonaws.com"    # endpoint
 HOSTPORT = 8883                                                # non web-socket
 
-CLIENT_ID = "RPMDOC0000"
-DATA_TOPIC = "rpm/sos/RPMSOS0000"
-STAT_TOPIC = "rpm/tus/RPMSOS0000"
+CLIENT_ID = "RPMTEST"
+TARGET_ID = ""
+while (TARGET_ID == "" or TARGET_ID.isspace()):
+    TARGET_ID = input("Enter target id: ")
+CONNECT_TOPIC = "aws/events/presence/connected/" + TARGET_ID
+DISCONNECT_TOPIC = "aws/events/presence/disconnected/" + TARGET_ID
 SUB_QOS   = mqtt.QoS.AT_LEAST_ONCE
 
-CERTI_PATH = 'auth/RPMDOC/0cd28110e617ed0a83e0a667c5966bf54878cd197f471a3312a9b9be6ca6c0c4-certificate.pem.crt'
-KEY_PATH = 'auth/RPMDOC/0cd28110e617ed0a83e0a667c5966bf54878cd197f471a3312a9b9be6ca6c0c4-private.pem.key'
+CERTI_PATH = 'auth/RPMTEST/44d92c5c9fa24dd5a2989af328afec0160349a4875275b20617996aa50d6d5ed-certificate.pem.crt'
+KEY_PATH = 'auth/RPMTEST/44d92c5c9fa24dd5a2989af328afec0160349a4875275b20617996aa50d6d5ed-private.pem.key'
 
-MAX_RECONNECTION_ATTEMPTS = 2
+MAX_RECONNECTION_ATTEMPTS = 1
 
 def onMessage(topic: str, payload: bytes, dup: bool, qos: mqtt.QoS, retain: bool, **kwargs: dict):
     """
@@ -102,7 +105,8 @@ try:
     connectResult = connectFuture.result()  # will raise an AwsCrtError on failure
     print(f"[C] connected: session_present<{connectResult['session_present']}>")
 
-    subscribeTopic(clientConnection, DATA_TOPIC)
+    subscribeTopic(clientConnection, CONNECT_TOPIC)
+    subscribeTopic(clientConnection, DISCONNECT_TOPIC)
 
     # listening
     while True:
