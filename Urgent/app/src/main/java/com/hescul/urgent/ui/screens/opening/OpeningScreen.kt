@@ -7,11 +7,13 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserSession
 import com.hescul.urgent.R
 import com.hescul.urgent.ui.theme.UrgentTheme
 import java.util.*
@@ -20,11 +22,13 @@ import java.util.*
 @Composable
 fun OpeningScreen(
     openingViewModel: OpeningViewModel,
-    onDone: () -> Unit,
+    onAutoLoginSuccess: (CognitoUserSession) -> Unit,
+    onAutoLoginFailure: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val localContext = LocalContext.current
     LaunchedEffect(Unit) {
-        openingViewModel.showOpening { onDone() }
+        openingViewModel.onLaunch(localContext, onAutoLoginSuccess, onAutoLoginFailure)
     }
     Column(
         modifier = modifier.fillMaxSize(),
@@ -48,7 +52,8 @@ fun PreviewOpeningScreen() {
         Surface {
             OpeningScreen(
                 openingViewModel = openingViewModel,
-                onDone = {}
+                onAutoLoginSuccess = {},
+                onAutoLoginFailure = {}
             )
         }
     }
