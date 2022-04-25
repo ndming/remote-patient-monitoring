@@ -17,16 +17,23 @@ import com.hescul.urgent.core.cognito.CognitoConfig
 import com.hescul.urgent.core.mqtt.doctor.MqttDoctorClient
 import com.hescul.urgent.core.mqtt.MqttBrokerConfig
 import com.hescul.urgent.core.mqtt.MqttClientConfig
+import com.hescul.urgent.core.mqtt.doctor.DoctorMessage
 import com.hescul.urgent.core.mqtt.patient.*
 import com.hescul.urgent.core.utils.InfoValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.*
+import kotlin.collections.HashMap
 
 class PatientViewModel(context: Context) : ViewModel() {
     private val credentialsProvider = CognitoCachingCredentialsProvider(context, CognitoConfig.IDENTITY_POOL_ID, CognitoConfig.IDENTITY_POOL_REGION)
     private lateinit var mqttDoctorClient: MqttDoctorClient
+    val patients = mutableStateListOf<Patient>()
+
+    var isInitializedPatients by mutableStateOf(false)
+        private set
 
     var isLaunched by mutableStateOf(false)
         private set
@@ -38,8 +45,17 @@ class PatientViewModel(context: Context) : ViewModel() {
         private set
     var isStatusError by mutableStateOf(false)
         private set
+    var showExpirationAlert by mutableStateOf(false)
+        private set
 
-    val patients = mutableStateListOf<Patient>()
+    fun onSignOutDismiss() {
+        showExpirationAlert = false
+    }
+
+    fun onSignOutConfirm(onDone: () -> Unit) {
+        isProgressing = true
+        onDone()
+    }
 
     fun updateCredentialsProvider(userSession: CognitoUserSession) {
         val logins = HashMap<String, String>()
@@ -50,6 +66,9 @@ class PatientViewModel(context: Context) : ViewModel() {
     private fun setStatus(message: String = "", isError: Boolean = false) {
         status = message
         isStatusError = isError
+        if (isError && credentialsProvider.sessionCredentialsExpiration.after(Date())) {
+            showExpirationAlert = true
+        }
     }
 
     fun onLaunch() {
@@ -133,10 +152,13 @@ class PatientViewModel(context: Context) : ViewModel() {
                 when (iotStatus) {
                     AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected -> {
                         isConnected = true
-                        requestResubscribe {
-                            setStatus()
-                            isProgressing = false
+                        if (!isInitializedPatients) {
+                            fetchSubscribedPatients()
                         }
+                        else {
+                            requestResubscribe()
+                        }
+
                     }
                     AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.ConnectionLost -> {
                         isConnected = false
@@ -146,12 +168,84 @@ class PatientViewModel(context: Context) : ViewModel() {
                     }
                     else -> {
                         isConnected = false
-                        setStatus(iotStatus.name)
+                        setStatus(REFRESHING_MESSAGE)
                         isProgressing = true
                     }
                 }
             }
         )
+    }
+
+    private fun fetchSubscribedPatients() {
+        setStatus(FETCH_PATIENTS_MESSAGE)
+        val onFailure = { _: String ->
+            val message = FETCH_PATIENTS_FAILED + REFRESH_INSTRUCTION_POSTFIX
+            setStatus(message, true)
+            isProgressing = false
+        }
+        val onDone = {
+            setStatus()
+            isInitializedPatients = true
+            isProgressing = false
+        }
+        mqttDoctorClient.subscribeDoctor(
+            identityId = identityId,
+            onSubscriptionSuccess = {
+                val waitJob = viewModelScope.launch {
+                    delay(WAITING_FOR_SUBSCRIBED_PATIENTS_TIMEOUT)
+                }
+                waitJob.invokeOnCompletion {
+                    onDone()
+                }
+            },
+            onSubscriptionFailure = onFailure,
+            onMessageCallback = { topic, payload ->
+                onDoctorMessageArrive(
+                    topic =  topic,
+                    payload =  payload,
+                    onDone =  onDone,
+                    onFailure = onFailure
+                )
+            }
+        )
+    }
+
+    private fun onDoctorMessageArrive(topic: String, payload: ByteArray, onDone: () -> Unit, onFailure: (String) -> Unit) {
+        // expensive routine
+        viewModelScope.launch {
+            val doctorId = topic.substringAfterLast(MqttClientConfig.TOPIC_SEPARATOR)
+            if (doctorId != identityId) {
+                Timber.tag(DEBUG_TAG).e("Conflict identities when fetching subscribed patients: doctorId<$doctorId> vs. identityId<$identityId>")
+                onFailure(FETCH_PATIENTS_FAILED)
+            }
+            else {
+                mqttDoctorClient.unsubscribeDoctor(identityId)
+                val patientMetadataList = DoctorMessage.create(
+                    input = String(payload),
+                    onFailure = { cause ->
+                        Timber.tag(DEBUG_TAG).e("Failed to parse doctor message: $cause")
+                    }
+                )
+                patientMetadataList.forEach { patientMetadata ->
+                    val patient = Patient(
+                        deviceId = patientMetadata.deviceId,
+                        name = patientMetadata.name
+                    )
+                    patient.attributes.addAll(patientMetadata.attributes)
+                    patients.add(patient)
+                    mqttDoctorClient.subscribePatient(
+                        deviceId = patientMetadata.deviceId,
+                        onSubscriptionSuccess = {},
+                        onMessageCallback = this@PatientViewModel::onPatientMessageArrive,
+                        onSubscriptionFailure = { cause ->
+                            Timber.tag(DEBUG_TAG).e("Failed to subscribe during fetching patients: $cause")
+                            patients.remove(patient)
+                        }
+                    )
+                }
+                onDone()
+            }
+        }
     }
 
 
@@ -187,9 +281,10 @@ class PatientViewModel(context: Context) : ViewModel() {
                 patients[0].attributes.add(attribute.clone())
             }
         }
-        mqttDoctorClient.subscribe(
+        mqttDoctorClient.subscribePatient(
             deviceId = deviceIdInputText,
             onSubscriptionSuccess = {
+                requestUpdateSubscribedPatients()
                 isProgressing = false
             },
             onSubscriptionFailure = {
@@ -201,11 +296,29 @@ class PatientViewModel(context: Context) : ViewModel() {
                 }
                 showErrorJob.invokeOnCompletion { setStatus() }
             },
-            onMessageCallback = this::onMessageArrive
+            onMessageCallback = this::onPatientMessageArrive
         )
     }
 
-    private fun onMessageArrive(topic: String, payload: ByteArray) {
+    private fun requestUpdateSubscribedPatients() {
+        val message = DoctorMessage.serialize(
+            patients = patients,
+            onFailure = {
+                Timber.tag(DEBUG_TAG).e("Failed to serialize doctor message!")
+            }
+        )
+        if (message.isNotBlank()) {
+            mqttDoctorClient.updateSubscribedPatients(
+                message = message,
+                identityId = identityId,
+                onStatusChange = { status, _ ->
+                    Timber.tag(DEBUG_TAG).d("Doctor message delivery status change: $status")
+                }
+            )
+        }
+    }
+
+    private fun onPatientMessageArrive(topic: String, payload: ByteArray) {
         val targetDeviceId = topic.substringAfterLast('/')
         val targetPatient = patients.find { patient -> patient.deviceId == targetDeviceId }
         if (targetPatient == null) {
@@ -262,11 +375,14 @@ class PatientViewModel(context: Context) : ViewModel() {
         }
     }
 
-    private fun requestResubscribe(onDone: () -> Unit) {
+    private fun requestResubscribe() {
         mqttDoctorClient.resubscribe(
             devices = patients.map { it.deviceId },
-            onDone = onDone,
-            messageCallback = this::onMessageArrive,
+            onDone = {
+                setStatus()
+                isProgressing = false
+            },
+            messageCallback = this::onPatientMessageArrive,
             onEachFailure = { deviceId ->
                 patients.removeIf { it.deviceId == deviceId }
             }
@@ -326,8 +442,9 @@ class PatientViewModel(context: Context) : ViewModel() {
     fun isSubscribeButtonEnable() = InfoValidator.isDeviceIdValid(deviceIdInputText) && !isProgressing && isConnected
 
     fun onDeletePatientRequest(patient: Patient, onDone: () -> Unit) {
-        mqttDoctorClient.unsubscribe(patient.deviceId)
+        mqttDoctorClient.unsubscribePatient(patient.deviceId)
         patients.remove(patient)
+        requestUpdateSubscribedPatients()
         onDone()
     }
 
@@ -359,9 +476,25 @@ class PatientViewModel(context: Context) : ViewModel() {
         else if (!isConnected) {
             requestConnect()
         }
+        else if (!isInitializedPatients) {
+            fetchSubscribedPatients()
+        }
         else {
             isProgressing = false
         }
+    }
+
+    fun resetSession() {
+        mqttDoctorClient.disconnect()
+        isInitializedPatients = false
+        isLaunched = false
+        isProgressing = false
+        isConnected = false
+        setStatus()
+        patients.clear()
+        identityId = ""
+        attachedPolicies = false
+        isRefreshing = false
     }
 
     companion object {
@@ -369,15 +502,19 @@ class PatientViewModel(context: Context) : ViewModel() {
         private const val OBTAIN_IDENTITY_ID_MESSAGE = "Obtaining identity id"
         private const val CHECK_ATTACHED_POLICY_MESSAGE = "Checking attached policies"
         private const val ATTACH_POLICY_MESSAGE = "Attaching required policies"
+        private const val FETCH_PATIENTS_MESSAGE = "Fetching subscribed patients"
         private const val CONNECTION_LOST_MESSAGE = "Connection lost."
+        private const val REFRESHING_MESSAGE = "Refreshing"
 
         private const val OBTAIN_IDENTITY_ID_FAILED = "Failed to obtain identity id."
         private const val CHECK_ATTACHED_POLICY_FAILED = "Failed to check attached policies."
         private const val ATTACH_POLICY_FAILED = "Failed to attach policy."
         private const val SUBSCRIBE_FAILED = "Failed to subscribe. Please try again."
+        private const val FETCH_PATIENTS_FAILED = "Failed to fetch subscribed patients."
         private const val REFRESH_INSTRUCTION_POSTFIX = " Swipe down to refresh."
 
         private const val MESSAGE_SHOW_TIME = 3000L  // in ms
+        private const val WAITING_FOR_SUBSCRIBED_PATIENTS_TIMEOUT = 4000L // in ms
     }
 
     override fun onCleared() {
