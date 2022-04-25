@@ -32,7 +32,8 @@ fun HomeScreen(
     patientViewModel: PatientViewModel,
     doctorViewModel: DoctorViewModel,
     onPatientSelect: (Patient) -> Unit,
-    modifier: Modifier = Modifier,
+    onSignOut: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val localContext = LocalContext.current
     LaunchedEffect(Unit) {
@@ -92,7 +93,7 @@ fun HomeScreen(
                             }
                         },
                         extended = patientListState.firstVisibleItemScrollOffset == 0,
-                        enabled = !patientViewModel.isProgressing && patientViewModel.isConnected
+                        enabled = !patientViewModel.isProgressing && patientViewModel.isConnected && patientViewModel.isInitializedPatients
                     )
                 }
             },
@@ -100,7 +101,8 @@ fun HomeScreen(
                 HomeBottomBar(
                     homeNavController = homeNavController,
                     screens = listOf(HomeScreens.Patient, HomeScreens.Doctor),
-                    onScreenChange = homeViewModel::onCurrentScreenChange
+                    onScreenChange = homeViewModel::onCurrentScreenChange,
+                    enabled = !doctorViewModel.isProgressing
                 )
             }
         ) { contentPadding ->
@@ -120,7 +122,23 @@ fun HomeScreen(
                     exitTransition = {
                         fadeOut(animationSpec = tween(durationMillis = 400))
                     }
-                ) { PatientScreen(patientViewModel, patientListState, onPatientSelect = onPatientSelect) }
+                ) {
+                    PatientScreen(
+                        patientViewModel = patientViewModel,
+                        patientListState =  patientListState,
+                        onPatientSelect = onPatientSelect,
+                        onSignOutRequest = {
+                            doctorViewModel.onSignOutConfirm(
+                                context = localContext,
+                                onDone = {
+                                    patientViewModel.resetSession()
+                                    homeViewModel.resetSession()
+                                    onSignOut()
+                                }
+                            )
+                        }
+                    )
+                }
                 composable(
                     HomeScreens.Doctor.route,
                     enterTransition = {
@@ -132,14 +150,21 @@ fun HomeScreen(
                     exitTransition = {
                         fadeOut(animationSpec = tween(durationMillis = 400))
                     }
-                ) { DoctorScreen(
-                    doctorViewModel =  doctorViewModel,
-                    connected = patientViewModel.isConnected,
-                    onNavigateBack = {
-                        homeViewModel.onCurrentScreenChange(HomeScreens.Patient.route)
-                        homeNavController.popBackStack()
-                    }
-                ) }
+                ) {
+                    DoctorScreen(
+                        doctorViewModel =  doctorViewModel,
+                        connected = patientViewModel.isConnected,
+                        onNavigateBack = {
+                            homeViewModel.onCurrentScreenChange(HomeScreens.Patient.route)
+                            homeNavController.popBackStack()
+                        },
+                        onSignOutDone = {
+                            patientViewModel.resetSession()
+                            homeViewModel.resetSession()
+                            onSignOut()
+                        }
+                    )
+                }
             }
         }
     }
@@ -157,7 +182,8 @@ fun PreviewHomeScreen() {
                 homeViewModel = homeViewModel,
                 patientViewModel = patientViewModel,
                 doctorViewModel = doctorViewModel,
-                onPatientSelect = {}
+                onPatientSelect = {},
+                onSignOut = {}
             )
         }
     }
