@@ -18,6 +18,10 @@ class MqttDoctorClient(clientId: String, endpoint: String) {
         mqttManager.maxAutoReconnectAttempts = MqttClientConfig.MAX_AUTO_RECONNECTION_ATTEMPTS
         mqttManager.setCleanSession(MqttClientConfig.CLEAN_SESSION)
         mqttManager.setAutoResubscribe(MqttClientConfig.AUTO_RESUBSCRIBE)
+        mqttManager.setReconnectRetryLimits(
+            MqttClientConfig.MIN_RECONNECT_RETRY_TIME,
+            MqttClientConfig.MAX_RECONNECT_RETRY_TIME
+        )
     }
 
     companion object {
@@ -100,7 +104,7 @@ class MqttDoctorClient(clientId: String, endpoint: String) {
      * with the error reason string. The [onMessageCallback] is registered for both channels and
      * it will be called on any message arrival with the topic and the payload.
      */
-    fun subscribe(
+    fun subscribePatient(
         deviceId: String,
         onSubscriptionSuccess: () -> Unit,
         onSubscriptionFailure: (String) -> Unit,
@@ -144,11 +148,42 @@ class MqttDoctorClient(clientId: String, endpoint: String) {
             MqttClientConfig.SUBSCRIBE_QOS, statusSubscriptionCallback, messageCallback)
     }
 
-    fun unsubscribe(deviceId: String) {
+    fun unsubscribePatient(deviceId: String) {
         val dataTopic = MqttClientConfig.DATA_TOPIC_PREFIX + deviceId
         val statusTopic = MqttClientConfig.STATUS_TOPIC_PREFIX + deviceId
         mqttManager.unsubscribeTopic(dataTopic)
         mqttManager.unsubscribeTopic(statusTopic)
+    }
+
+    fun subscribeDoctor(
+        identityId: String,
+        onSubscriptionSuccess: () -> Unit,
+        onSubscriptionFailure: (String) -> Unit,
+        onMessageCallback: (String, ByteArray) -> Unit
+    ) {
+        val doctorTopic = MqttClientConfig.DOCTOR_TOPIC_PREFIX + identityId
+        val subscriptionCallback = object: AWSIotMqttSubscriptionStatusCallback {
+            override fun onSuccess() {
+                Timber.tag(DEBUG_TAG).d("subscribed successfully to doctor topic of $identityId!")
+                onSubscriptionSuccess()
+            }
+
+            override fun onFailure(exception: Throwable?) {
+                Timber.tag(DEBUG_TAG).e("doctor subscription failed: ${exception?.message}")
+                onSubscriptionFailure(exception?.message ?: DEFAULT_SUBSCRIPTION_FAIL_CAUSE)
+            }
+        }
+        val messageCallback = AWSIotMqttNewMessageCallback { topic, data ->
+            Timber.tag(DEBUG_TAG).d("message received: topic<$topic> | data:\n${String(data)}")
+            onMessageCallback(topic, data)
+        }
+        mqttManager.subscribeToTopic(doctorTopic, MqttClientConfig.SUBSCRIBE_QOS, subscriptionCallback, messageCallback)
+    }
+
+    fun unsubscribeDoctor(identityId: String) {
+        val topic = MqttClientConfig.DOCTOR_TOPIC_PREFIX + identityId
+        mqttManager.unsubscribeTopic(topic)
+        Timber.tag(DEBUG_TAG).d("Unsubscribed from doctor<$identityId>")
     }
 
     fun resubscribe(
@@ -158,7 +193,7 @@ class MqttDoctorClient(clientId: String, endpoint: String) {
         messageCallback: (String, ByteArray) -> Unit
     ) {
         devices.forEach { deviceId ->
-            subscribe(
+            subscribePatient(
                 deviceId = deviceId,
                 onSubscriptionSuccess = {},
                 onSubscriptionFailure = {
@@ -168,5 +203,12 @@ class MqttDoctorClient(clientId: String, endpoint: String) {
             )
         }
         onDone()
+    }
+
+    fun updateSubscribedPatients(message: String, identityId: String,
+        onStatusChange: (AWSIotMqttMessageDeliveryCallback.MessageDeliveryStatus, Any) -> Unit
+    ) {
+        val topic = MqttClientConfig.DOCTOR_TOPIC_PREFIX + identityId
+        mqttManager.publishString(message, topic, MqttClientConfig.PUBLISH_QOS, onStatusChange, null, true)
     }
 }
