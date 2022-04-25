@@ -1,5 +1,7 @@
 package com.hescul.urgent.ui.versatile
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -16,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.hescul.urgent.R
 import com.hescul.urgent.ui.theme.UrgentTheme
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun UrgentTopBar(
     title: String,
@@ -53,11 +56,26 @@ fun UrgentTopBar(
                     )
                 }
             }
-            Text(
-                text = title,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.SemiBold),
-            )
+            AnimatedContent(
+                targetState = title,
+                transitionSpec = {
+                    ContentTransform(
+                        targetContentEnter = slideIntoContainer(
+                            towards = AnimatedContentScope.SlideDirection.Down,
+                            animationSpec = tween(600)
+                        ),
+                        initialContentExit = fadeOut(
+                            animationSpec = tween(0)
+                        )
+                    )
+                }
+            ) {
+                Text(
+                    text = title,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.SemiBold),
+                )
+            }
             var expanded by remember { mutableStateOf(false) }
             Box(modifier = Modifier) {
                 IconButton(
