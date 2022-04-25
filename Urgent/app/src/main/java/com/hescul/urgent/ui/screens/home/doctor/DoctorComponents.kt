@@ -3,7 +3,9 @@ package com.hescul.urgent.ui.screens.home.doctor
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
@@ -19,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hescul.urgent.R
 import com.hescul.urgent.core.mqtt.doctor.Doctor
 import com.hescul.urgent.ui.theme.UrgentTheme
@@ -71,10 +74,10 @@ fun DoctorOption(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 20.dp)
+                    .padding(vertical = 15.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    val iconSize = 40.dp
+                    val iconSize = 30.dp
                     Icon(
                         imageVector = option.icon,
                         contentDescription = stringResource(id = option.iconDescription),
@@ -84,7 +87,7 @@ fun DoctorOption(
                     Spacer(modifier = Modifier.padding(horizontal = 10.dp))
                     Text(
                         text = stringResource(id = option.title),
-                        style = MaterialTheme.typography.h5,
+                        style = MaterialTheme.typography.h5.copy(fontSize = 20.sp),
                         color = Color.Black
                     )
                 }
@@ -116,12 +119,16 @@ fun AccountContent(
                     .padding(vertical = 5.dp)
             ) {
                 Text(
-                    text = Doctor.Attribute.values().find { it.key == key }?.translate?.let { stringResource(id = it) } ?: key
+                    text = Doctor.Attribute.values().find { it.key == key }?.translate?.let { stringResource(id = it) } ?: key,
+                    modifier = Modifier.padding(end = 10.dp)
                 )
-                Text(
-                    text = value.ifBlank { Doctor.DEFAULT_UNKNOWN_VALUE },
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(modifier = Modifier
+                    .horizontalScroll(rememberScrollState())) {
+                    Text(
+                        text = value.ifBlank { Doctor.DEFAULT_UNKNOWN_VALUE },
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -155,5 +162,52 @@ fun PreviewAccountContent() {
                 attributes = attributes
             )
         }
+    }
+}
+
+@Composable
+fun DoctorSignOutAlertDialog(
+    showAlertDialog: Boolean,
+    onConfirmSignOut: () -> Unit,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (showAlertDialog) {
+        AlertDialog(
+            modifier = modifier,
+            onDismissRequest = onDismissRequest,
+            title = {
+                Row {
+                    Text(
+                        text = stringResource(id = R.string.ui_doctorScreen_alertTitle),
+                        color = MaterialTheme.colors.primary
+                    )
+                }
+            },
+            text = {
+                Text(text = stringResource(id = R.string.ui_doctorScreen_alertContent))
+            },
+            shape = MaterialTheme.shapes.small,
+            buttons = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = 20.dp, bottom = 10.dp),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    TextButton(onClick = onDismissRequest) {
+                        Text(
+                            text = stringResource(id = R.string.ui_doctorScreen_alertDismissButton))
+                    }
+                    Spacer(modifier = Modifier.padding(horizontal = 10.dp))
+                    TextButton(onClick = onConfirmSignOut) {
+                        Text(
+                            text = stringResource(id = R.string.ui_doctorScreen_alertConfirmButton),
+                            color = MaterialTheme.colors.error
+                        )
+                    }
+                }
+            }
+        )
     }
 }
