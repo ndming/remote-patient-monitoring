@@ -27,7 +27,7 @@ class DoctorMessage {
             return patients
         }
 
-        fun serialize(patients: List<Patient>): String {
+        fun serialize(patients: List<Patient>, onFailure: (String) -> Unit): String {
             val patientMetadataList = patients.map {
                 PatientMetadata(
                     deviceId = it.deviceId,
@@ -35,7 +35,12 @@ class DoctorMessage {
                     attributes = it.attributes
                 )
             }
-            return mapper.writeValueAsString(patientMetadataList)
+            return try {
+                mapper.writeValueAsString(patientMetadataList)
+            } catch (exception: JsonProcessingException) {
+                onFailure(exception.originalMessage)
+                ""
+            }
         }
     }
 }
