@@ -33,8 +33,16 @@ fun PatientScreen(
     patientViewModel: PatientViewModel,
     patientListState: LazyListState,
     onPatientSelect: (Patient) -> Unit,
+    onSignOutRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    LoginExpirationAlertDialog(
+        showAlertDialog = patientViewModel.showExpirationAlert,
+        onSignOut = {
+            patientViewModel.onSignOutConfirm(onSignOutRequest)
+        },
+        onDismiss = patientViewModel::onSignOutDismiss
+    )
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxSize()
@@ -163,7 +171,8 @@ private fun PreviewPatientScreen() {
             PatientScreen(
                 patientViewModel = patientViewModel,
                 patientListState = rememberLazyListState(),
-                onPatientSelect = {}
+                onPatientSelect = {},
+                onSignOutRequest = {}
             )
         }
     }
