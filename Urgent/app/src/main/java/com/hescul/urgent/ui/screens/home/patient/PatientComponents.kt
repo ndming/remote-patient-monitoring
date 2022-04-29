@@ -195,7 +195,6 @@ private fun PatientDataSlot(
                         style = MaterialTheme.typography.h6,
                         textAlign = TextAlign.Center,
                         color = textColor,
-                        modifier = Modifier.padding(top = 3.dp) // make data text aligned with icon
                     )
                 }
             }

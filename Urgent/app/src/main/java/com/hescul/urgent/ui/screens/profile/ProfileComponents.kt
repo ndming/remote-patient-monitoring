@@ -135,7 +135,8 @@ fun PatientProfileData(
         Spacer(modifier = Modifier.padding(vertical = headerPadding))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AnimatedContent(
                 targetState = data.value,
