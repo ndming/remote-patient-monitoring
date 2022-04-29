@@ -158,7 +158,10 @@ fun SubscribeSheet(
                     style = MaterialTheme.typography.h5,
                 )
                 TextButton(
-                    onClick = onSubscribeRequest,
+                    onClick = {
+                        keyboardController?.hide()
+                        onSubscribeRequest()
+                    },
                     enabled = patientViewModel.isSubscribeButtonEnable()
                 ) {
                     Text(
