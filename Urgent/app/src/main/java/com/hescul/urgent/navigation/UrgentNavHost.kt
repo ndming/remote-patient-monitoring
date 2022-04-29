@@ -186,6 +186,7 @@ fun UrgentNavHost(
                             navController.navigate(UrgentScreens.Profile.name)
                         },
                         onSignOut = {
+                            viewModels.loginViewModel.reset()
                             navController.navigate(UrgentScreens.Login.name) {
                                 popUpTo(UrgentScreens.Home.name) {
                                     inclusive = true
