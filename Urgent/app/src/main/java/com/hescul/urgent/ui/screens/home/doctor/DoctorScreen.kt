@@ -3,8 +3,8 @@ package com.hescul.urgent.ui.screens.home.doctor
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -25,6 +25,7 @@ import com.hescul.urgent.R
 @Composable
 fun DoctorScreen(
     doctorViewModel: DoctorViewModel,
+    scrollState: ScrollState,
     connected: Boolean,
     onNavigateBack: () -> Unit,
     onSignOutDone: () -> Unit,
@@ -81,7 +82,7 @@ fun DoctorScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(horizontal = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -154,7 +155,8 @@ fun PreviewDoctorScreen() {
                 doctorViewModel = doctorViewModel,
                 connected = true,
                 onNavigateBack = {},
-                onSignOutDone = {}
+                onSignOutDone = {},
+                scrollState = ScrollState(0)
             )
         }
     }

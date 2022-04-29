@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -41,6 +42,7 @@ fun HomeScreen(
         if (!doctorViewModel.isLaunched) doctorViewModel.onLaunch(localContext)
     }
     val patientListState = rememberLazyListState()
+    val doctorScrollState = rememberScrollState()
     val scaffoldState = rememberScaffoldState()
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val coroutineScope = rememberCoroutineScope()
@@ -78,7 +80,11 @@ fun HomeScreen(
                     }),
                     showNavigateBack = false,
                     showMoreContentButton = true,
-                    enableMoreContent = true
+                    enableMoreContent = true,
+                    elevation = when (homeViewModel.currentScreen) {
+                        HomeScreens.Patient.route -> if (patientListState.firstVisibleItemIndex == 0) 0.dp else 1.dp
+                        else -> if (doctorScrollState.value == 0) 0.dp else 1.dp
+                    }
                 )
             },
             floatingActionButton = {
@@ -154,6 +160,7 @@ fun HomeScreen(
                     DoctorScreen(
                         doctorViewModel =  doctorViewModel,
                         connected = patientViewModel.isConnected,
+                        scrollState = doctorScrollState,
                         onNavigateBack = {
                             homeViewModel.onCurrentScreenChange(HomeScreens.Patient.route)
                             homeNavController.popBackStack()

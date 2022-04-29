@@ -30,6 +30,7 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scrollState = rememberScrollState()
     Column(modifier = modifier.fillMaxSize()) {
         UrgentTopBar(
             title = stringResource(id = R.string.ui_profileScreen_title),
@@ -38,11 +39,12 @@ fun ProfileScreen(
             onNavigateBack = onNavigateBack,
             enableNavigateBack = true,
             enableMoreContent = true,
+            elevation = if (scrollState.value == 0) 0.dp else 1.dp
         )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

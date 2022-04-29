@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.hescul.urgent.R
@@ -25,6 +26,7 @@ fun UrgentTopBar(
     showNavigateBack: Boolean,
     showMoreContentButton: Boolean,
     modifier: Modifier = Modifier,
+    elevation: Dp = 0.dp,
     onNavigateBack: () -> Unit = {},
     enableNavigateBack: Boolean = false,
     enableMoreContent: Boolean = false,
@@ -38,7 +40,7 @@ fun UrgentTopBar(
     TopAppBar(
         modifier = modifier,
         backgroundColor = MaterialTheme.colors.surface,
-        elevation = 0.dp
+        elevation = elevation
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
