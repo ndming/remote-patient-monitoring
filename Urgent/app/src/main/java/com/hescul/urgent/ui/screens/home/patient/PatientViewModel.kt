@@ -24,12 +24,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.*
 import kotlin.collections.HashMap
 
 class PatientViewModel(context: Context) : ViewModel() {
     private val credentialsProvider = CognitoCachingCredentialsProvider(context, CognitoConfig.IDENTITY_POOL_ID, CognitoConfig.IDENTITY_POOL_REGION)
     private lateinit var mqttDoctorClient: MqttDoctorClient
+    private lateinit var userSession: CognitoUserSession
     val patients = mutableStateListOf<Patient>()
 
     var isInitializedPatients by mutableStateOf(false)
@@ -61,12 +61,13 @@ class PatientViewModel(context: Context) : ViewModel() {
         val logins = HashMap<String, String>()
         logins[CognitoConfig.PROVIDER_NAME] = userSession.idToken.jwtToken
         credentialsProvider.logins = logins
+        this.userSession = userSession
     }
 
     private fun setStatus(message: String = "", isError: Boolean = false) {
         status = message
         isStatusError = isError
-        if (isError && credentialsProvider.sessionCredentialsExpiration.after(Date())) {
+        if (isError && !userSession.isValid) {
             showExpirationAlert = true
         }
     }
@@ -495,6 +496,7 @@ class PatientViewModel(context: Context) : ViewModel() {
         identityId = ""
         attachedPolicies = false
         isRefreshing = false
+        showExpirationAlert = false
     }
 
     companion object {
